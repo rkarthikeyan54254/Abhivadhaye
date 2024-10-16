@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { abhivadhayeData } from './data';
+import Footer from './components/Footer';
 import AdComponent from './components/AdComponent';
 import { FaFeather } from 'react-icons/fa';
 import Select from 'react-select';
@@ -56,22 +57,22 @@ const App: React.FC = () => {
 
   const generateTranslation = () => {
     return `
-Abhivadaye - I am saluting you.
+    \n1. Abhivadaye - I am saluting you.
 
-${selectedGothraData?.Gothra} gotrah - I belong to the ${selectedGothraData?.Gothra} gotra.
+    \n2. ${selectedGothraData?.Gothra} gotrah - I belong to the ${selectedGothraData?.Gothra} gotra.
 
-${selectedGothraData?.Rishi1} ${selectedGothraData?.Rishi2} ${selectedGothraData?.Rishi3} trayarsheya pravaranvita - Names of the three Rishis who started ${selectedGothraData?.Gothra} gotra.
+    \n3.${selectedGothraData?.Rishi1} ${selectedGothraData?.Rishi2} ${selectedGothraData?.Rishi3} trayarsheya pravaranvita - Names of the three Rishis who started ${selectedGothraData?.Gothra} gotra.
 
 This is called the pravara of the gotra.
 
-${selectedSuthra} sutrah - the ${selectedSuthra} sutra which I follow.
+\n4.${selectedSuthra} sutrah - the ${selectedSuthra} sutra which I follow.
 
-${selectedVeda} shakhadhyayi - I learn ${selectedVeda} veda
+\n5.${selectedVeda} shakhadhyayi - I learn ${selectedVeda} veda
 
-${name} Sharmahamasmi - I am ${name} Sharma
+\n6.${name} Sharmahamasmi - I am ${name} Sharma
 
-Bhoh - similar to Sir in English.
-    `;
+\n7.Bhoh - similar to Sir in English.
+    `.trim();
   };
 
   const handleSubmitFeedback = () => {
@@ -222,8 +223,12 @@ Bhoh - similar to Sir in English.
 
         <AdComponent adSlot="1234567890" />
       </div>
+      <Footer />
     </div>
+      
   );
+
+  
 };
 
 export default App;
