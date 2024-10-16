@@ -1,0 +1,217 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Noto+Sans+Devanagari:wght@400;700&display=swap');
+
+:root {
+  --bg-color: #1a1a1a;
+  --text-color: #ffffff;
+  --component-bg: #2a2a2a;
+  --accent-color: #ff9933;
+  --border-color: #444444;
+}
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.hero-image-container {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 20px;
+}
+
+.hero-image {
+  width: 100%;
+  height: 460px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.title {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: white;
+  font-size: 3rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.content {
+  max-width: 1200px;
+  width: 100%;
+}
+
+.description-box {
+  background-color: var(--component-bg);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.main-content {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.form-container {
+  flex: 2;
+  background-color: var(--component-bg);
+  border-radius: 10px;
+  padding: 20px;
+  margin-right: 20px;
+}
+
+.side-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.benefits-box {
+  background-color: var(--component-bg);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.visit-counter {
+  background-color: var(--component-bg);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text-color);
+}
+
+.react-select-container {
+  margin-bottom: 15px;
+}
+
+.react-select__control {
+  background-color: var(--component-bg) !important;
+  border-color: var(--border-color) !important;
+}
+
+.react-select__menu {
+  background-color: var(--component-bg) !important;
+}
+
+.react-select__option {
+  background-color: var(--component-bg) !important;
+  color: var(--text-color) !important;
+}
+
+.react-select__option--is-focused {
+  background-color: var(--accent-color) !important;
+}
+
+.react-select__single-value {
+  color: var(--text-color) !important;
+}
+
+.name-input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  background-color: var(--component-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color);
+}
+
+.generate-button {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.generate-button svg {
+  margin-left: 10px;
+}
+
+.result {
+  background-color: var(--component-bg);
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.result h2 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.result p {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.devanagari {
+  font-family: 'Noto Sans Devanagari', sans-serif;
+  font-size: 1.2rem;
+}
+
+.feedback-section {
+  background-color: var(--component-bg);
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.feedback-section textarea {
+  width: 100%;
+  height: 100px;
+  margin-bottom: 10px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-color);
+  padding: 10px;
+}
+
+.feedback-button {
+  padding: 10px 20px;
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.ad-container {
+  margin-top: 20px;
+  background-color: var(--component-bg);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
