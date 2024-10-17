@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { abhivadhayeData } from './data';
-import Footer from './components/Footer';
-import AdComponent from './components/AdComponent';
+import { abhivadhayeData } from './data.js';
+import Footer from './components/Footer.js';
+import AdComponent from './components/AdComponent.js';
 import { FaFeather } from 'react-icons/fa';
 import Select from 'react-select';
 import emailjs from '@emailjs/browser';
+// declare module 'react-icons/*';
 
 const App: React.FC = () => {
   const [selectedGothra, setSelectedGothra] = useState('');
