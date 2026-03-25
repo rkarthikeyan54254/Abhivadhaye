@@ -2,11 +2,26 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { abhivadhayeData, AbhivadhayeRecord } from './data';
 import Footer from './components/Footer';
 import AdComponent from './components/AdComponent';
-import { FaFeather, FaCopy, FaWhatsapp, FaInfoCircle, FaLanguage, FaHistory, FaOm, FaUserCheck, FaLightbulb } from 'react-icons/fa';
+import { 
+  FaFeather, 
+  FaCopy, 
+  FaWhatsapp, 
+  FaInfoCircle, 
+  FaLanguage, 
+  FaHistory, 
+  FaOm, 
+  FaUserCheck, 
+  FaLightbulb 
+} from 'react-icons/fa';
 import Select from 'react-select';
 import emailjs from '@emailjs/browser';
 
 type Language = 'English' | 'Hindi' | 'Tamil' | 'Telugu';
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 const SCRIPTS: Record<Language, Record<string, string>> = {
   English: {
@@ -90,9 +105,9 @@ const COMMON_MAPPINGS: Record<string, Record<Language, string>> = {
   "Aapasthambha": { English: "Aapasthambha", Hindi: "आपस्तम्भ", Tamil: "ஆபஸ்தம்ப", Telugu: "ఆపస్తంభ" },
   "BhOdhAyana": { English: "Bodhayana", Hindi: "बोधायन", Tamil: "போதாயன", Telugu: "బోధాయన" },
   "HiraNyakESi": { English: "HiraNyakESi", Hindi: "हिरण्यकेशी", Tamil: "ஹிரண்யகேஸி", Telugu: "హిరణ్యకేశీ" },
-  "AaSvakAyana": { English: "AaSvakAyana", Hindi: "आश्वलायन", Tamil: "ஆஸ்வலாயன", Telugu: "ஆశ్వలాయన" },
+  "AaSvakAyana": { English: "AaSvakAyana", Hindi: "आश्वलायन", Tamil: "ஆஸ்வலாயன", Telugu: "ஆஸ்வலாயன" },
   "SaankhyAyana": { English: "SaankhyAyana", Hindi: "शांखायन", Tamil: "ஸாங்க்யாயன", Telugu: "శాంఖ్యాయన" },
-  "Kousheetakee": { English: "Kousheetakee", Hindi: "कौषीतकि", Tamil: "கௌஷீதகி", Telugu: "கௌஷீதகி" },
+  "Kousheetakee": { English: "Kousheetakee", Hindi: "कौषीतकि", Tamil: "கௌஷீதகி", Telugu: "కౌషీతకి" },
   "BhAradhwAja": { English: "Bharadwaja", Hindi: "भारद्वाज", Tamil: "பாரத்வாஜ", Telugu: "భారద్వాజ" },
   "Maanava": { English: "Maanava", Hindi: "मानव", Tamil: "மானவ", Telugu: "మానవ" },
   "KaaDaka": { English: "KaaDaka", Hindi: "काठक", Tamil: "காடக", Telugu: "కాఠక" },
@@ -102,16 +117,16 @@ const COMMON_MAPPINGS: Record<string, Record<Language, string>> = {
   "Jaimineeya": { English: "Jaimineeya", Hindi: "जैमिनीय", Tamil: "ஜைமினீய", Telugu: "జైమినీ య" },
   "KouSika": { English: "KouSika", Hindi: "कौशिक", Tamil: "கௌஸிக", Telugu: "కౌశిక" },
 
-  // --- GOTHRAS ---
+  // --- GOTHRAS & RISHIS ---
   "Kundina Gowthama": { English: "Kundina Gowthama", Hindi: "कुण्डिन गौतम", Tamil: "குண்டின கௌதம", Telugu: "కుండిన గౌతమ" },
   "Bharadwaja": { English: "Bharadwaja", Hindi: "भारद्वाज", Tamil: "பாரத்வாஜ", Telugu: "భారద్వాజ" },
   "Vadula Savarni &Yaska": { English: "Vadula Savarni & Yaska", Hindi: "वादूल सावर्णि यास्क", Tamil: "வாதூல ஸாவர்ணி யாஸ்க", Telugu: "వాదూల సావర్ణి యాస్క" },
   "Maitreya": { English: "Maitreya", Hindi: "मैत्रेय", Tamil: "மைத்ரேய", Telugu: "మైత్రేయ" },
   "Shaunaka": { English: "Shaunaka", Hindi: "शौनक", Tamil: "ஸௌனக", Telugu: "శౌనక" },
   "Gartsamada": { English: "Gartsamada", Hindi: "गृत्समद", Tamil: "க்ருத்ஸமத", Telugu: "గృత్సమద" },
-  "Vatsa": { English: "Vatsa", Hindi: "वत्स", Tamil: "வத்ஸ", Telugu: "வత్స" },
+  "Vatsa": { English: "Vatsa", Hindi: "वत्स", Tamil: "வத்ஸ", Telugu: "వత్స" },
   "Srivatsa": { English: "Srivatsa", Hindi: "श्रीवत्स", Tamil: "ஸ்ரீவத்ஸ", Telugu: "శ్రీవత్స" },
-  "Aarshtisena": { English: "Aarshtisena", Hindi: "आर्ष्टिषेण", Tamil: "ஆர்ஷ்டிஷேண", Telugu: "ఆర్ష్టిషేణ" },
+  "Aarshtisena": { English: "Aarshtisena", Hindi: "आर्ष्टिषेण", Tamil: "ஆர்ஷ்டிஷேண", Telugu: "ஆர்ష్టిషేణ" },
   "Bidasa": { English: "Bidasa", Hindi: "बीडस", Tamil: "பீடஸ", Telugu: "బీడస" },
   "Shatamarshana": { English: "Shatamarshana", Hindi: "शठमर्षण", Tamil: "ஷடமர்ஷண", Telugu: "శఠమర్షణ" },
   "AAtreya/Krishnatreya": { English: "Atreya / Krishnatreya", Hindi: "आत्रेय / कृष्णात्रेय", Tamil: "ஆத்ரேய / கிருஷ்ணாத்ரேய", Telugu: "ఆత్రేయ / కృష్ణాత్రేయ" },
@@ -133,9 +148,9 @@ const COMMON_MAPPINGS: Record<string, Record<Language, string>> = {
   "Kapi": { English: "Kapi", Hindi: "कपि", Tamil: "கபி", Telugu: "కపి" },
   "Kapila": { English: "Kapila", Hindi: "कपिल", Tamil: "கபில", Telugu: "కపిల" },
   "Kanva": { English: "Kanva", Hindi: "कण्व", Tamil: "கண்வ", Telugu: "కణ్వ" },
-  "Paraasara": { English: "Paraasara", Hindi: "पराशर", Tamil: "பராஸர", Telugu: "பராశర" },
+  "Paraasara": { English: "Paraasara", Hindi: "पराशर", Tamil: "பராஸர", Telugu: "పరాశర" },
   "Upamanyu": { English: "Upamanyu", Hindi: "उपमन्यु", Tamil: "உபமன்யு", Telugu: "ఉపమన్యు" },
-  "Aagastya": { English: "Aagastya", Hindi: "अगस्त्य", Tamil: "அகஸ்த்ய", Telugu: "அగస్త్య" },
+  "Aagastya": { English: "Aagastya", Hindi: "अगस्त्य", Tamil: "அகஸ்த்ய", Telugu: "అగస్త్య" },
   "Gargyasa": { English: "Gargyasa", Hindi: "गार्ग्यस", Tamil: "கார்க்யஸ", Telugu: "గార్గ్యస" },
   "Bhadarayana": { English: "Bhadarayana", Hindi: "बादरायण", Tamil: "பாதராயண", Telugu: "బాదరాయణ" },
   "Kashyapa": { English: "Kashyapa", Hindi: "कश्यप", Tamil: "கஸ்யப", Telugu: "కశ్యప" },
@@ -143,8 +158,6 @@ const COMMON_MAPPINGS: Record<string, Record<Language, string>> = {
   "Suryadhwaja": { English: "Suryadhwaja", Hindi: "सूर्यध्वज", Tamil: "ஸூர்யத்வஜ", Telugu: "సూర్యధ్వజ" },
   "Daivaratasa": { English: "Daivaratasa", Hindi: "दैवरातस", Tamil: "தைவராதஸ", Telugu: "దైవరాతస" },
   "chikitasa": { English: "Chikitasa", Hindi: "चिकितास", Tamil: " சிகிதாஸ", Telugu: "చికీతాస" },
-
-  // --- RISHIS ---
   "Angirasa": { English: "Angirasa", Hindi: "आङ्गिरस", Tamil: "ஆங்கிரஸ", Telugu: "ఆంగిరస" },
   "Ayasya": { English: "Ayasya", Hindi: "आयास्य", Tamil: "ஆயாஸ்ய", Telugu: "ఆయాస్య" },
   "Bhaarhaspatya": { English: "Bhaarhaspatya", Hindi: "बार्हस्पत्य", Tamil: "பார்ஹஸ்பத்ய", Telugu: "బార్హస్పత్య" },
@@ -155,13 +168,13 @@ const COMMON_MAPPINGS: Record<string, Record<Language, string>> = {
   "Shaunaka(ekarsheya)": { English: "Shaunaka", Hindi: "शौनक", Tamil: "ஸௌனக", Telugu: "శౌనక" },
   "Sunahotra": { English: "Sunahotra", Hindi: "शुनहोत्र", Tamil: "ஸுனஹோத்ர", Telugu: "శునహోత్ర" },
   "Chyavana": { English: "Chyavana", Hindi: "च्यवन", Tamil: "ச்யவன", Telugu: "ச்யவன" },
-  "Apnavana": { English: "Apnavana", Hindi: "आप्नवान", Tamil: "ஆப்னவான", Telugu: "ஆப்னவாన" },
+  "Apnavana": { English: "Apnavana", Hindi: "आप्नवान", Tamil: "ஆப்னவான", Telugu: "ஆப்னவான" },
   "Apnuvat": { English: "Apnuvat", Hindi: "आप्नुवत्", Tamil: "ஆப்னுவத்", Telugu: "ఆప్నువత్" },
   "Aurava": { English: "Aurava", Hindi: "और्व", Tamil: "ஔர்வ", Telugu: "ఔర్వ" },
   "Jamadagnya": { English: "Jamadagnya", Hindi: "जामदग्न्य", Tamil: "ஜாமதக்ன்ய", Telugu: "జామదగ్న్య" },
   "Anupa": { English: "Anupa", Hindi: "अनूप", Tamil: "அனூப", Telugu: "అనూప" },
   "Baida": { English: "Baida", Hindi: "बैद", Tamil: "பைத", Telugu: "பைத" },
-  "Powrukutsa": { English: "Powrukutsa", Hindi: "पौरुकुत्स", Tamil: "पौरुकुत्स", Telugu: "పౌరుకుత్స" },
+  "Powrukutsa": { English: "Powrukutsa", Hindi: "पौरुकुत्स", Tamil: "பௌருகுத்ஸ", Telugu: "பௌருகுத்ஸ" },
   "Traasatasya": { English: "Traasatasya", Hindi: "त्रासदस्य", Tamil: "த்ராஸதஸ்ய", Telugu: "త్రాసదస్య" },
   "Atreya": { English: "Atreya", Hindi: "आत्रेय", Tamil: "ஆத்ரேய", Telugu: "ఆత్రేయ" },
   "Aarchanaasa": { English: "Aarchanaasa", Hindi: "आर्चरासन", Tamil: "ஆர்சனாஸ", Telugu: "ஆர்சனாஸ" },
@@ -169,10 +182,8 @@ const COMMON_MAPPINGS: Record<string, Record<Language, string>> = {
   "Gavisthira": { English: "Gavisthira", Hindi: "गाविष्ठिर", Tamil: "காவிஷ்டிர", Telugu: "గావిష్ఠిర" },
   "Purvatitha": { English: "Purvatitha", Hindi: "पूर्वातिथि", Tamil: "பூர்வாதிதி", Telugu: "పూర్వాతిథి" },
   "Vaiswaamitra": { English: "Vaiswaamitra", Hindi: "वैश्वामित्र", Tamil: "வைஸ்வாமித்ர", Telugu: "వైశ్వామిత్ర" },
-  "Aghamarshana": { English: "Aghamarshana", Hindi: "अघमर्षण", Tamil: "அகமர்ஷண", Telugu: "அఘమర్షణ" },
+  "Aghamarshana": { English: "Aghamarshana", Hindi: "अघमर्षण", Tamil: "அகமர்ஷண", Telugu: "అఘమర్షణ" },
   "AAgamarshana": { English: "Aghamarshana", Hindi: "अघमर्षण", Tamil: "அகமர்ஷண", Telugu: "అఘమర్షణ" },
-  "Kalabodhana": { English: "Kalabodhana", Hindi: "कालबोधन", Tamil: "காலபோதன", Telugu: "కాలబోధన" },
-  "Kalabodhana / Kalaboudha": { English: "Kalabodhana", Hindi: "कालबोधन", Tamil: "காலபோதன", Telugu: "కాలబోధన" },
   "Tvashta": { English: "Tvashta", Hindi: "त्वष्टा", Tamil: "த்வஷ்டா", Telugu: "త్వష్టా" },
   "Vishvaroopa": { English: "Vishvaroopa", Hindi: "विश्वरूप", Tamil: "விஸ்வரூப", Telugu: "விశ్వరూప" },
   "Devaraata": { English: "Devaraata", Hindi: "देवरात", Tamil: "தேவராத", Telugu: "దేవరాత" },
@@ -181,16 +192,14 @@ const COMMON_MAPPINGS: Record<string, Record<Language, string>> = {
   "Aindrapramada": { English: "Aindrapramada", Hindi: "ऐन्द्रप्रमद", Tamil: "ஐந்த்ரப்ரமத", Telugu: "ఐంద్రప్రమద" },
   "Abharadvasavya": { English: "Abharadvasavya", Hindi: "आभरद्वसु", Tamil: "ஆபரத்வஸவ்ய", Telugu: "ఆభరద్వసవ్య" },
   "Vashista(ekarsheya)": { English: "Vashista", Hindi: "वशिष्ठ", Tamil: "वஸிஷ்ட", Telugu: "వశిష్ఠ" },
-  "Harita": { English: "Harita", Hindi: "हारित", Tamil: "ஹாரித", Telugu: "ஹாரித்த" },
+  "Harita": { English: "Harita", Hindi: "हारित", Tamil: "ஹாரித", Telugu: "హారిత" },
   "Ambarisha": { English: "Ambarisha", Hindi: "अम्बरीष", Tamil: "அம்பரீஷ", Telugu: "అంబరీష" },
-  "Yuvanasva": { English: "Yuvanasva", Hindi: "युवनाश्व", Tamil: "யுவனாஸ்வ", Telugu: "యువనాశ్వ" },
+  "Yuvanasva": { English: "Yuvanasva", Hindi: "युवनाश्व", Tamil: "யுவனாస్వ", Telugu: "యువనాశ్వ" },
   "Aayasyasa": { English: "Aayasyasa", Hindi: "आयास्य", Tamil: "ஆயாஸ்ய", Telugu: "ఆయాస్య" },
   "Gautama": { English: "Gautama", Hindi: "गौतम", Tamil: "கௌதம", Telugu: "గౌతమ" },
   "Bharmyasva": { English: "Bharmyasva", Hindi: "भार्म्यश्व", Tamil: "பார்ம்யஸ்வ", Telugu: "భార్మ్యశ్వ" },
-  "Mowdgalya": { English: "Mowdgalya", Hindi: "मौद्गल्य", Tamil: "மௌத்கல்ய", Telugu: "மௌద్గల్మ" },
   "Tarkshya": { English: "Tarkshya", Hindi: "तार्क्ष्य", Tamil: "தார்க்ஷ்ய", Telugu: "తార్క్ష్య" },
   "Dhavya": { English: "Dhavya", Hindi: "धाव्य", Tamil: "தாவ்ய", Telugu: "ధావ్య" },
-  "Kasyapa": { English: "Kasyapa", Hindi: "कश्यप", Tamil: "கஸ்யப", Telugu: "కశ్యప" },
   "Aavatsaara": { English: "Aavatsaara", Hindi: "आवत्सार", Tamil: "ஆவத்ஸார", Telugu: "ఆవత్సార" },
   "Daivala": { English: "Daivala", Hindi: "दैवल", Tamil: "தைவல", Telugu: "దైవల" },
   "Asitha": { English: "Asitha", Hindi: "असित", Tamil: "அஸித", Telugu: "అసిత" },
@@ -207,12 +216,11 @@ const COMMON_MAPPINGS: Record<string, Record<Language, string>> = {
   "Saaktya": { English: "Saaktya", Hindi: "शाक्त्य", Tamil: "ஸாக்த்ய", Telugu: "శాక్త్య" },
   "Paarasarya": { English: "Paarasarya", Hindi: "पाराशर्य", Tamil: "பாராஸர்ய", Telugu: "పారాశర్య" },
   "Bhadravasavya": { English: "Bhadravasavya", Hindi: "भद्रवसव", Tamil: "பத்ரவஸவ்ய", Telugu: "భద్రవసవ్య" },
-  "Aagastya": { English: "Aagastya", Hindi: "अगस्त्य", Tamil: "அகஸ்த்ய", Telugu: "అగస్త్య" },
-  "Tardhachyuta": { English: "Tardhachyuta", Hindi: "दार्ढच्युत", Tamil: "தார்டச்யுத", Telugu: "దార్ఢచ్యుత" },
+  "Tardhachyuta": { English: "Tardhachyuta", Hindi: "दार्ढच्युत", Tamil: "தார்டச்யுத", Telugu: "దార్ఢच్యుత" },
   "Sowmavaha": { English: "Sowmavaha", Hindi: "सोमवाह", Tamil: "ஸோமவாஹ", Telugu: "సోమవాహ" },
   "Sainya": { English: "Sainya", Hindi: "सैन्य", Tamil: "ஸைன்ய", Telugu: "సైన్య" },
   "Gaargya": { English: "Gaargya", Hindi: "गार्ग्य", Tamil: "கார்க்ய", Telugu: "గార్గ్య" },
-  "Paarshadaswa": { English: "Paarshadaswa", Hindi: "पार्षदश्व", Tamil: "பார்ஷதస్వ", Telugu: "పార్షదశ్వ" },
+  "Paarshadaswa": { English: "Paarshadaswa", Hindi: "पार्षदश्व", Tamil: "பார்ஷதస్வ", Telugu: "పార్షదశ్వ" },
   "Raatitara": { English: "Raatitara", Hindi: "राथीतर", Tamil: "ராதீதர", Telugu: "రాథీతర" },
   "Kowravidha": { English: "Kowravidha", Hindi: "कौरविध", Tamil: "கௌரவித", Telugu: "కౌరవిధ" },
   "Saankritya": { English: "Saankritya", Hindi: "सांकृत्य", Tamil: "ஸாங்க்ருத்ய", Telugu: "సాంకృత్య" },
@@ -266,15 +274,13 @@ const App: React.FC = () => {
   const [pageVisits, setPageVisits] = useState(0);
   const [factIndex, setFactIndex] = useState(0);
 
-  // Persistent Counter Logic using a public API
   useEffect(() => {
     fetch('https://api.countapi.xyz/hit/abhivadhaye.in/visits')
       .then(res => res.json())
-      .then(data => setPageVisits(data.value || 1250)) // Fallback to a respectable number if API fails
+      .then(data => setPageVisits(data.value || 1250))
       .catch(() => setPageVisits(1250));
   }, []);
 
-  // Rolling Facts logic
   useEffect(() => {
     const factInterval = setInterval(() => {
       setFactIndex((prev) => (prev + 1) % VEDIC_FACTS.length);
@@ -286,23 +292,34 @@ const App: React.FC = () => {
     if (activeLang !== 'English' && !nativeName) {
       setNativeName(transliteratePhonetic(name, activeLang));
     }
-  }, [name, activeLang]);
+  }, [name, activeLang, nativeName]);
 
   const uniqueGothraNames = useMemo(
-    () => [...new Set(abhivadhayeData.map((item) => item.Gothra.replace(/\s\d+$/, '')))].sort(),
+    () => [...new Set(abhivadhayeData.map((item: AbhivadhayeRecord) => item.Gothra.replace(/\s\d+$/, '')))].sort(),
     []
   );
 
   const availableVariations = useMemo(() => {
     if (!selectedGothraName) return [];
-    return abhivadhayeData.filter(item => item.Gothra.startsWith(selectedGothraName));
+    return abhivadhayeData.filter((item: AbhivadhayeRecord) => item.Gothra.startsWith(selectedGothraName));
   }, [selectedGothraName]);
 
   const selectedGothraData = useMemo(() => availableVariations[selectedVariationIndex], [availableVariations, selectedVariationIndex]);
-  const uniqueVedas = useMemo(() => [...new Set(abhivadhayeData.map((item) => item.Veda).filter(Boolean))].sort(), []);
+  
+  const uniqueVedas = useMemo(() => [
+    ...new Set(abhivadhayeData.map((item: AbhivadhayeRecord) => item.Veda).filter(Boolean))
+  ].sort(), []);
+
   const filteredSuthras = useMemo(() => {
     if (!selectedVeda) return [];
-    return [...new Set(abhivadhayeData.filter((item) => item.Veda === selectedVeda).map((item) => item.Suthra).filter(Boolean))].sort();
+    return [
+      ...new Set(
+        abhivadhayeData
+          .filter((item: AbhivadhayeRecord) => item.Veda === selectedVeda)
+          .map((item: AbhivadhayeRecord) => item.Suthra)
+          .filter(Boolean)
+      )
+    ].sort();
   }, [selectedVeda]);
 
   const handleGenerate = () => {
@@ -334,7 +351,15 @@ const App: React.FC = () => {
   const getGeneratedText = (lang: Language) => {
     if (!selectedGothraData) return "";
     const script = SCRIPTS[lang];
-    const rishis = [selectedGothraData.Rishi1, selectedGothraData.Rishi2, selectedGothraData.Rishi3, selectedGothraData.Rishi4, selectedGothraData.Rishi5, selectedGothraData.Rishi6, selectedGothraData.Rishi7].filter(Boolean) as string[];
+    const rishis = [
+      selectedGothraData.Rishi1, 
+      selectedGothraData.Rishi2, 
+      selectedGothraData.Rishi3, 
+      selectedGothraData.Rishi4, 
+      selectedGothraData.Rishi5, 
+      selectedGothraData.Rishi6, 
+      selectedGothraData.Rishi7
+    ].filter(Boolean) as string[];
     const count = rishis.length;
     const pravaraText = script[PRAVARA_EN_MAP[count] || `${count} Arseya`] || `${count} Arseya`;
     const nativeGothra = translate(selectedGothraName, lang);
@@ -390,7 +415,12 @@ const App: React.FC = () => {
               <label><FaInfoCircle /> Select Your Gothra</label>
               <Select
                 options={uniqueGothraNames.map((g) => ({ value: g, label: g }))}
-                onChange={(opt) => { setSelectedGothraName(opt?.value || ''); setSelectedVariationIndex(0); setIsGenerated(false); }}
+                onChange={(opt) => { 
+                  const val = (opt as SelectOption)?.value || '';
+                  setSelectedGothraName(val); 
+                  setSelectedVariationIndex(0); 
+                  setIsGenerated(false); 
+                }}
                 placeholder="Search your Gothra..."
                 className="custom-select"
                 classNamePrefix="react-select"
@@ -401,8 +431,12 @@ const App: React.FC = () => {
               <div className="variation-panel">
                 <p className="panel-label"><FaInfoCircle /> Choose your family's Rishi combination:</p>
                 <div className="variation-grid">
-                  {availableVariations.map((v, idx) => (
-                    <div key={idx} className={`variation-chip ${selectedVariationIndex === idx ? 'active' : ''}`} onClick={() => { setSelectedVariationIndex(idx); setIsGenerated(false); }}>
+                  {availableVariations.map((v: AbhivadhayeRecord, idx: number) => (
+                    <div 
+                      key={idx} 
+                      className={`variation-chip ${selectedVariationIndex === idx ? 'active' : ''}`} 
+                      onClick={() => { setSelectedVariationIndex(idx); setIsGenerated(false); }}
+                    >
                       {[v.Rishi1, v.Rishi2, v.Rishi3].filter(Boolean).join(", ")}
                     </div>
                   ))}
@@ -415,7 +449,11 @@ const App: React.FC = () => {
                 <label>Veda</label>
                 <Select 
                   options={uniqueVedas.map((v) => ({ value: v, label: v }))} 
-                  onChange={(opt) => { setSelectedVeda(opt?.value || ''); setIsGenerated(false); }} 
+                  onChange={(opt) => { 
+                    const val = (opt as SelectOption)?.value || '';
+                    setSelectedVeda(val); 
+                    setIsGenerated(false); 
+                  }} 
                   placeholder="Select Veda" 
                   className="custom-select" 
                   classNamePrefix="react-select"
@@ -425,7 +463,11 @@ const App: React.FC = () => {
                 <label>Suthra</label>
                 <Select 
                   options={filteredSuthras.map((s) => ({ value: s, label: s }))} 
-                  onChange={(opt) => { setSelectedSuthra(opt?.value || ''); setIsGenerated(false); }} 
+                  onChange={(opt) => { 
+                    const val = (opt as SelectOption)?.value || '';
+                    setSelectedSuthra(val); 
+                    setIsGenerated(false); 
+                  }} 
                   placeholder="Select Suthra" 
                   className="custom-select" 
                   classNamePrefix="react-select"
@@ -435,13 +477,25 @@ const App: React.FC = () => {
 
             <div className="form-group">
               <label>Your Name (English)</label>
-              <input type="text" value={name} onChange={(e) => { setName(e.target.value); setIsGenerated(false); }} placeholder="e.g. Rama Sharma" className="custom-input" />
+              <input 
+                type="text" 
+                value={name} 
+                onChange={(e) => { setName(e.target.value); setIsGenerated(false); }} 
+                placeholder="e.g. Rama Sharma" 
+                className="custom-input" 
+              />
             </div>
 
             {activeLang !== 'English' && (
               <div className="form-group animate-fade-in">
                 <label>Your Name in {activeLang}</label>
-                <input type="text" value={nativeName} onChange={(e) => setNativeName(e.target.value)} placeholder={`e.g. ${activeLang === 'Hindi' ? 'राम शर्मा' : 'ராம ஷர்மா'}`} className="custom-input native-input" />
+                <input 
+                  type="text" 
+                  value={nativeName} 
+                  onChange={(e) => setNativeName(e.target.value)} 
+                  placeholder={`e.g. ${activeLang === 'Hindi' ? 'राम शर्मा' : 'ராம ஷர்மா'}`} 
+                  className="custom-input native-input" 
+                />
                 <span className="input-hint"><FaLanguage /> Edit if the transliteration needs correction.</span>
               </div>
             )}
@@ -454,7 +508,7 @@ const App: React.FC = () => {
           <div className="stats-card card-shadow">
             <div className="stats-icon"><FaOm /></div>
             <h4>{pageVisits}+</h4>
-            <p>Abhivadhayes Generated</p>
+            <p>Abhivadhayes Served</p>
             <div className="did-you-know">
               <h5><FaLightbulb /> Wisdom of the Sages</h5>
               <div key={factIndex} className="fact-container animate-fade-in">
