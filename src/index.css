@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&family=Noto+Sans+Telugu:wght@400;700&display=swap');
 
+* {
+  box-sizing: border-box;
+}
+
 :root {
   --bg-color: #0f0f0f;
   --card-bg: #1a1a1a;
@@ -105,16 +109,19 @@ body {
 }
 
 .info-card li {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 12px;
   color: var(--text-muted);
+  line-height: 1.4;
 }
 
 .info-card li svg {
   color: var(--accent-color);
-  font-size: 0.8rem;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  margin-top: 4px;
 }
 
 /* --- Stepper --- */
@@ -181,6 +188,13 @@ body {
   font-size: 3rem;
   color: var(--accent-color);
   margin-bottom: 10px;
+}
+
+.ad-container {
+  margin: 20px 0;
+  min-height: 90px;
+  display: flex;
+  justify-content: center;
 }
 
 .stats-card h4 {
@@ -284,6 +298,7 @@ body {
   border-radius: 8px;
   color: white;
   font-family: inherit;
+  font-size: 16px;
 }
 
 .custom-input:focus {
@@ -325,6 +340,12 @@ body {
   font-size: 0.8rem;
   cursor: pointer;
   text-align: center;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
 }
 
 .variation-chip.active {
@@ -403,6 +424,7 @@ body {
 
 .native-font {
   font-family: 'Noto Sans Devanagari', 'Noto Sans Tamil', 'Noto Sans Telugu', sans-serif;
+  line-height: 1.8;
 }
 
 .action-row {
@@ -536,7 +558,85 @@ body {
 .card-shadow { box-shadow: var(--shadow); }
 
 @media (max-width: 768px) {
-  .info-grid, .main-content-layout, .form-row { grid-template-columns: 1fr; }
-  .hero-title { font-size: 3rem; }
-  .stepper-section { display: none; }
+  .info-grid, .main-content-layout { grid-template-columns: 1fr; }
+  .form-row { flex-direction: column; gap: 0; }
+  
+  .hero-section {
+    height: 350px;
+  }
+
+  .hero-title {
+    font-size: clamp(1.5rem, 9vw, 3rem);
+    letter-spacing: 0.05em;
+    padding: 0 5px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+    text-shadow: 0 0 10px rgba(255, 153, 51, 0.5);
+  }
+
+  .hero-subtitle {
+    font-size: 0.95rem;
+    padding: 0 10px;
+  }
+
+  .content-wrapper {
+    margin-top: -30px;
+    width: 95%;
+  }
+
+  .info-card, .form-card, .result-card {
+    padding: 20px;
+  }
+
+  .stats-card h4 {
+    font-size: 2rem;
+  }
+
+  .mantra-text {
+    font-size: 1.25rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  .mantra-display {
+    padding: 15px;
+  }
+
+  .stepper-section {
+    display: none;
+  }
+
+  .lang-bar {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .lang-btn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .action-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 12vw;
+    letter-spacing: 1px;
+  }
+
+  .mantra-text {
+    font-size: 1.1rem;
+  }
 }
