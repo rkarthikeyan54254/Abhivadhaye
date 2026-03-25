@@ -566,18 +566,19 @@ body {
   }
 
   .hero-title {
-    font-size: clamp(1.5rem, 9vw, 3rem);
-    letter-spacing: 0.05em;
-    padding: 0 5px;
+    font-size: clamp(1.5rem, 8vw, 3rem);
+    letter-spacing: normal;
+    padding: 0 10px;
     width: 100%;
     box-sizing: border-box;
-    overflow-wrap: break-word;
     text-shadow: 0 0 10px rgba(255, 153, 51, 0.5);
+    line-height: 1.1;
   }
 
   .hero-subtitle {
     font-size: 0.95rem;
-    padding: 0 10px;
+    padding: 0 15px;
+    max-width: 100%;
   }
 
   .content-wrapper {
@@ -632,11 +633,18 @@ body {
 
 @media (max-width: 480px) {
   .hero-title {
-    font-size: 12vw;
-    letter-spacing: 1px;
+    font-size: 7.5vw;
+    letter-spacing: -0.01em;
   }
 
   .mantra-text {
     font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .hero-title {
+    font-size: 7vw;
+    letter-spacing: -0.02em;
   }
 }
