@@ -532,7 +532,10 @@ const App: React.FC = () => {
               </p>
               <div className="action-row">
                 <button onClick={() => { navigator.clipboard.writeText(getGeneratedText(activeLang)); alert('Copied!'); }} className="action-btn"><FaCopy /> Copy</button>
-                <button onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(getGeneratedText(activeLang))}`, '_blank')} className="action-btn wa-btn"><FaWhatsapp /> WhatsApp</button>
+                <button onClick={() => {
+                  const shareMsg = `My Abhivadhaye:\n\n${getGeneratedText(activeLang)}\n\nGenerate yours at: https://abhivadhaye.in`;
+                  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareMsg)}`, '_blank');
+                }} className="action-btn wa-btn"><FaWhatsapp /> WhatsApp</button>
               </div>
             </div>
 
