@@ -247,6 +247,29 @@ const VEDIC_FACTS = [
   "Following your 'Suthra' means following the specific ritualistic guidelines laid down by a Sage."
 ];
 
+const FAQ_DATA = [
+  {
+    question: "Why do we touch our ears while reciting the mantra?",
+    answer: "Tradition holds that the ears are sacred spots where deities reside. Touching them 'seals' the spiritual energy of the Sages' names within you and acts as a shield against the intense power invoked by the Pravara."
+  },
+  {
+    question: "Why are the hands crossed when touching an elder's feet?",
+    answer: "This is a precise energy protocol. By crossing hands (right hand to right foot, left to left), you create a direct circuit with the elder, allowing their blessings and positive energy to flow into you undisturbed."
+  },
+  {
+    question: "What does 'Sarma' or 'Sarmaham' actually mean?",
+    answer: "'Sarma' is a title signifying 'joy' or 'protection.' When you say 'Rama Sarma aham asmi,' you are declaring 'I am Rama, the one who is joyful and protected by the Divine.'"
+  },
+  {
+    question: "Can women perform Abhivadhaye?",
+    answer: "Traditionally, it is part of the Upanayanam ritual for men. However, in modern times, it is highly encouraged for everyone to know their Gothra and Rishi lineage as a vital way to preserve family history and identity."
+  },
+  {
+    question: "What if I only know my Gothra, but not my Veda or Suthra?",
+    answer: "Most Gothras have a historical 'default' Veda (like Yajur Veda for many South Indian lineages). If you're unsure, consulting family elders is best, but our generator helps you explore the most common associations for your Gothra."
+  }
+];
+
 const transliteratePhonetic = (name: string, lang: Language): string => {
   if (lang === 'English') return name;
   const lower = name.toLowerCase();
@@ -272,6 +295,7 @@ const App: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   const [pageVisits, setPageVisits] = useState(0);
   const [factIndex, setFactIndex] = useState(0);
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
   useEffect(() => {
     // Calculate visits based on time since a reference date (Jan 1, 2026)
@@ -552,13 +576,35 @@ const App: React.FC = () => {
                 }} className="action-btn wa-btn"><FaWhatsapp /> WhatsApp</button>
               </div>
             </div>
+<div className="meaning-card">
+  <h4>Meaning & Significance</h4>
+  <p className="meaning-text">{generateTranslation()}</p>
+</div>
+</div>
+)}
 
-            <div className="meaning-card">
-              <h4>Meaning & Significance</h4>
-              <p className="meaning-text">{generateTranslation()}</p>
-            </div>
-          </div>
-        )}
+<div className="faq-section">
+<h2 className="faq-title">Decoding the Ritual: <span>Secrets of the Sages</span></h2>
+<div className="faq-grid">
+{FAQ_DATA.map((item, idx) => (
+  <div 
+    key={idx} 
+    className={`faq-item ${activeFaq === idx ? 'active' : ''}`}
+    onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
+  >
+    <div className="faq-question">
+      {item.question}
+      <span className="faq-icon">{activeFaq === idx ? '−' : '+'}</span>
+    </div>
+    {activeFaq === idx && (
+      <div className="faq-answer animate-fade-in">
+        {item.answer}
+      </div>
+    )}
+  </div>
+))}
+</div>
+</div>
 
         <form 
           className="feedback-section-new" 
