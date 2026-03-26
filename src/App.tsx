@@ -14,7 +14,6 @@ import {
   FaLightbulb 
 } from 'react-icons/fa';
 import Select from 'react-select';
-import emailjs from '@emailjs/browser';
 
 type Language = 'English' | 'Hindi' | 'Tamil' | 'Telugu';
 
@@ -341,19 +340,24 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSubmitFeedback = () => {
+  const handleSubmitFeedback = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!feedback) return;
-    emailjs.send(
-      import.meta.env.VITE_EMAILJS_SERVICE_ID,
-      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-      { message: feedback },
-      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-    ).then(() => {
-      alert('Thank you for your feedback!');
-      setFeedback('');
-    }).catch(() => {
-      alert('Failed to send feedback. Please try again.');
-    });
+    
+    const formData = new FormData(e.currentTarget);
+
+    fetch("/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(formData as any).toString(),
+    })
+      .then(() => {
+        alert('Thank you for your feedback!');
+        setFeedback('');
+      })
+      .catch(() => {
+        alert('Failed to send feedback. Please try again.');
+      });
   };
 
   const translate = (term: string, lang: Language): string => lang === 'English' ? term : COMMON_MAPPINGS[term]?.[lang] || term;
@@ -556,11 +560,29 @@ const App: React.FC = () => {
           </div>
         )}
 
-        <div className="feedback-section-new">
+        <form 
+          className="feedback-section-new" 
+          name="feedback" 
+          onSubmit={handleSubmitFeedback}
+          data-netlify="true"
+          data-netlify-honeypot="bot-field"
+        >
+          <input type="hidden" name="form-name" value="feedback" />
+          <p className="hidden" style={{ display: 'none' }}>
+            <label>
+              Don't fill this out if you're human: <input name="bot-field" />
+            </label>
+          </p>
           <h3>Your feedback helps us grow</h3>
-          <textarea value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="How can we make this experience better for you?" />
-          <button onClick={handleSubmitFeedback}>Send Feedback</button>
-        </div>
+          <textarea 
+            name="message"
+            value={feedback} 
+            onChange={(e) => setFeedback(e.target.value)} 
+            placeholder="How can we make this experience better for you?" 
+            required
+          />
+          <button type="submit">Send Feedback</button>
+        </form>
 
         <AdComponent adSlot="1234567890" />
       </div>
