@@ -406,6 +406,28 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+.guided-notice {
+  background: rgba(255, 153, 51, 0.1);
+  border: 1px solid var(--accent-color);
+  color: #fff;
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.guided-notice button {
+  background: none;
+  border: none;
+  color: var(--accent-color);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 5px;
+}
+
 /* --- Guided Lookup --- */
 .lineage-results {
   margin-top: 15px;
@@ -454,6 +476,11 @@ body {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+.suggested-tag {
+  color: var(--accent-color);
+  font-weight: 700;
 }
 
 .search-hint, .no-results {

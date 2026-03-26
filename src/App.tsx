@@ -270,6 +270,22 @@ const FAQ_DATA = [
   }
 ];
 
+const SUGGESTED_DEFAULTS: Record<string, { veda: string, suthra: string }> = {
+  "Koushika": { veda: "Yajur", suthra: "Aapasthambha" },
+  "Bharadwaja": { veda: "Yajur", suthra: "Aapasthambha" },
+  "Vashista": { veda: "Yajur", suthra: "Aapasthambha" },
+  "Kowndinya": { veda: "Yajur", suthra: "Aapasthambha" },
+  "Sandilya": { veda: "Yajur", suthra: "Aapasthambha" },
+  "Haritasa": { veda: "Yajur", suthra: "Aapasthambha" },
+  "Gautamasa": { veda: "Yajur", suthra: "Aapasthambha" },
+  "Mowdgalya": { veda: "Yajur", suthra: "Aapasthambha" },
+  "Srivatsa": { veda: "Yajur", suthra: "Aapasthambha" },
+  "Atreya": { veda: "Yajur", suthra: "Aapasthambha" },
+  "Kashyapa": { veda: "Yajur", suthra: "Aapasthambha" },
+  "Viswamitra": { veda: "Yajur", suthra: "Aapasthambha" },
+  "Vadhula Savarni &Yaska": { veda: "Yajur", suthra: "Aapasthambha" },
+};
+
 const transliteratePhonetic = (name: string, lang: Language): string => {
   if (lang === 'English') return name;
   const lower = name.toLowerCase();
@@ -298,6 +314,7 @@ const App: React.FC = () => {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'expert' | 'guided'>('expert');
   const [searchQuery, setSearchQuery] = useState('');
+  const [guidedNotice, setGuidedNotice] = useState('');
 
   useEffect(() => {
     // Calculate visits based on time since a reference date (Jan 1, 2026)
@@ -377,10 +394,26 @@ const App: React.FC = () => {
     const idx = variations.findIndex(v => v.Rishi1 === item.Rishi1 && v.Rishi2 === item.Rishi2 && v.Rishi3 === item.Rishi3);
     
     setSelectedVariationIndex(idx >= 0 ? idx : 0);
-    setSelectedVeda(item.Veda);
-    setSelectedSuthra(item.Suthra);
+    
+    let veda = item.Veda;
+    let suthra = item.Suthra;
+    let usedDefault = false;
+
+    if (!veda && SUGGESTED_DEFAULTS[cleanGothra]) {
+      veda = SUGGESTED_DEFAULTS[cleanGothra].veda;
+      suthra = SUGGESTED_DEFAULTS[cleanGothra].suthra;
+      usedDefault = true;
+    }
+
+    setSelectedVeda(veda);
+    setSelectedSuthra(suthra);
     setSearchQuery('');
-    setActiveTab('expert'); // Switch back to see the selection or keep in mind it's filled
+    setGuidedNotice(usedDefault 
+      ? `We've pre-filled the most common Veda/Suthra for ${cleanGothra}. Please verify.` 
+      : `Selection complete for ${cleanGothra}.`
+    );
+    setActiveTab('expert'); 
+    
     setTimeout(() => {
       document.querySelector('.glow-button')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
@@ -495,6 +528,13 @@ const App: React.FC = () => {
               </button>
             </div>
 
+            {guidedNotice && (
+              <div className="guided-notice animate-fade-in">
+                <span>{guidedNotice}</span>
+                <button onClick={() => setGuidedNotice('')}>×</button>
+              </div>
+            )}
+
             {activeTab === 'expert' ? (
               <div className="animate-fade-in">
                 <div className="form-group">
@@ -507,6 +547,7 @@ const App: React.FC = () => {
                       setSelectedGothraName(val); 
                       setSelectedVariationIndex(0); 
                       setIsGenerated(false); 
+                      setGuidedNotice('');
                     }}
                     placeholder="Search your Gothra..."
                     className="custom-select"
@@ -580,17 +621,26 @@ const App: React.FC = () => {
                 <div className="lineage-results">
                   {filteredLineages.length > 0 ? (
                     <div className="lineage-grid">
-                      {filteredLineages.map((item, idx) => (
-                        <div key={idx} className="lineage-card" onClick={() => handleSelectLineage(item)}>
-                          <div className="lc-gothra">{item.Gothra.replace(/\s\d+$/, '')}</div>
-                          <div className="lc-rishis">{[item.Rishi1, item.Rishi2, item.Rishi3].filter(Boolean).join(", ")}</div>
-                          <div className="lc-meta">
-                            <span>{item.Veda || 'Unknown'} Veda</span>
-                            <span>•</span>
-                            <span>{item.Suthra || 'Unknown'} Suthra</span>
+                      {filteredLineages.map((item, idx) => {
+                        const cleanG = item.Gothra.replace(/\s\d+$/, '');
+                        const veda = item.Veda || SUGGESTED_DEFAULTS[cleanG]?.veda;
+                        const suthra = item.Suthra || SUGGESTED_DEFAULTS[cleanG]?.suthra;
+                        const isSuggested = !item.Veda && SUGGESTED_DEFAULTS[cleanG];
+
+                        return (
+                          <div key={idx} className="lineage-card" onClick={() => handleSelectLineage(item)}>
+                            <div className="lc-gothra">{cleanG}</div>
+                            <div className="lc-rishis">{[item.Rishi1, item.Rishi2, item.Rishi3].filter(Boolean).join(", ")}</div>
+                            <div className="lc-meta">
+                              <span className={isSuggested ? 'suggested-tag' : ''}>
+                                {isSuggested ? 'Suggested: ' : ''}{veda || 'Unknown'} Veda
+                              </span>
+                              <span>•</span>
+                              <span>{suthra || 'Unknown'} Suthra</span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : searchQuery.length >= 2 ? (
                     <p className="no-results">No exact match found. Try a different spelling or use the expert tab.</p>
