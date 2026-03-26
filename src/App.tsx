@@ -96,7 +96,7 @@ const SCRIPTS: Record<Language, Record<string, string>> = {
 const COMMON_MAPPINGS: Record<string, Record<Language, string>> = {
   // --- VEDAS ---
   "Rig": { English: "Rig", Hindi: "ऋग्", Tamil: "ருக்", Telugu: "ఋగ్" },
-  "Yajur": { English: "Yajur", Hindi: "यजुर्", Tamil: "யஜுர்", Telugu: "యజుర్" },
+  "Yajur": { English: "Yajur", Hindi: "यजुర్", Tamil: "யஜூர்", Telugu: "యజుర్" },
   "Saama": { English: "Saama", Hindi: "साम", Tamil: "ஸாம", Telugu: "సామ" },
   "Atarva": { English: "Atarva", Hindi: "अथर्व", Tamil: "அதர்வ", Telugu: "అథర్వ" },
 
@@ -104,7 +104,7 @@ const COMMON_MAPPINGS: Record<string, Record<Language, string>> = {
   "Aapasthambha": { English: "Aapasthambha", Hindi: "आपस्तम्भ", Tamil: "ஆபஸ்தம்ப", Telugu: "ఆపస్తంభ" },
   "BhOdhAyana": { English: "Bodhayana", Hindi: "बोधायन", Tamil: "போதாயன", Telugu: "బోధాయన" },
   "HiraNyakESi": { English: "HiraNyakESi", Hindi: "हिरण्यकेशी", Tamil: "ஹிரண்யகேஸி", Telugu: "హిరణ్యకేశీ" },
-  "AaSvakAyana": { English: "AaSvakAyana", Hindi: "आश्वलायन", Tamil: "ஆஸ்வலாயன", Telugu: "ஆஸ்வலாயன" },
+  "AaSvakAyana": { English: "AaSvakAyana", Hindi: "आश्वलायन", Tamil: "ஆஸ்வலாயன", Telugu: "ఆస్వలాయన" },
   "SaankhyAyana": { English: "SaankhyAyana", Hindi: "शांखायन", Tamil: "ஸாங்க்யாயன", Telugu: "శాంఖ్యాయన" },
   "Kousheetakee": { English: "Kousheetakee", Hindi: "कौषीतकि", Tamil: "கௌஷீதகி", Telugu: "కౌషీతకి" },
   "BhAradhwAja": { English: "Bharadwaja", Hindi: "भारद्वाज", Tamil: "பாரத்வாஜ", Telugu: "భారద్వాజ" },
@@ -119,116 +119,120 @@ const COMMON_MAPPINGS: Record<string, Record<Language, string>> = {
   // --- GOTHRAS & RISHIS ---
   "Kundina Gowthama": { English: "Kundina Gowthama", Hindi: "कुण्डिन गौतम", Tamil: "குண்டின கௌதம", Telugu: "కుండిన గౌతమ" },
   "Bharadwaja": { English: "Bharadwaja", Hindi: "भारद्वाज", Tamil: "பாரத்வாஜ", Telugu: "భారద్వాజ" },
+  "Koushika": { English: "Koushika", Hindi: "कौशिक", Tamil: "கௌஸிக", Telugu: "కౌశిక" },
+  "Vashista": { English: "Vashista", Hindi: "వశిష్ఠ", Tamil: "వஸிஷ்ட", Telugu: "వశిష్ఠ" },
+  "Kowndinya": { English: "Kowndinya", Hindi: "कౌణ్డిన్య", Tamil: "கௌண்டின்ய", Telugu: "కౌండిన్య" },
+  "Kashyapa": { English: "Kashyapa", Hindi: "कश्यप", Tamil: "கஸ்யப", Telugu: "కాశ్యప" },
+  "Atreya": { English: "Atreya", Hindi: "आत्रेय", Tamil: "ஆத்ரேய", Telugu: "ఆత్రేయ" },
+  "Sandilya": { English: "Sandilya", Hindi: "शाण्डिल्य", Tamil: "ஸாண்டில்ய", Telugu: "శాండిల్య" },
+  "Haritasa": { English: "Haritasa", Hindi: "हारितस", Tamil: "ஹாரிதஸ", Telugu: "హారితస" },
+  "Mowdgalya": { English: "Mowdgalya", Hindi: "मौद्गल्य", Tamil: "மௌத்கல்ய", Telugu: "మౌద్గల్య" },
+  "Srivatsa": { English: "Srivatsa", Hindi: "श्रीवत्स", Tamil: "ஸ்ரீவத்ஸ", Telugu: "శ్రీవత్స" },
+  "Aarshtisena": { English: "Aarshtisena", Hindi: "आर्ष्टिषेण", Tamil: "ஆர்ஷ்டிஷேண", Telugu: "ఆర్ష్టిషేణ" },
   "Vadula Savarni &Yaska": { English: "Vadula Savarni & Yaska", Hindi: "वादूल सावर्णि यास्क", Tamil: "வாதூல ஸாவர்ணி யாஸ்க", Telugu: "వాదూల సావర్ణి యాస్క" },
   "Maitreya": { English: "Maitreya", Hindi: "मैत्रेय", Tamil: "மைத்ரேய", Telugu: "మైత్రేయ" },
   "Shaunaka": { English: "Shaunaka", Hindi: "शौनक", Tamil: "ஸௌனக", Telugu: "శౌనక" },
   "Gartsamada": { English: "Gartsamada", Hindi: "गृत्समद", Tamil: "க்ருத்ஸமத", Telugu: "గృత్సమద" },
   "Vatsa": { English: "Vatsa", Hindi: "वत्स", Tamil: "வத்ஸ", Telugu: "వత్స" },
-  "Srivatsa": { English: "Srivatsa", Hindi: "श्रीवत्स", Tamil: "ஸ்ரீவத்ஸ", Telugu: "శ్రీవత్స" },
-  "Aarshtisena": { English: "Aarshtisena", Hindi: "आर्ष्टिषेण", Tamil: "ஆர்ஷ்டிஷேண", Telugu: "ஆர்ష్టిషేణ" },
   "Bidasa": { English: "Bidasa", Hindi: "बीडस", Tamil: "பீடஸ", Telugu: "బీడస" },
-  "Shatamarshana": { English: "Shatamarshana", Hindi: "शठमर्षण", Tamil: "ஷடமர்ஷண", Telugu: "శఠమర్షణ" },
+  "Shatamarshana": { English: "Shatamarshana", Hindi: "शठమర్షణ", Tamil: "ஷடமர்ஷண", Telugu: "శఠమర్షణ" },
   "AAtreya/Krishnatreya": { English: "Atreya / Krishnatreya", Hindi: "आत्रेय / कृष्णात्रेय", Tamil: "ஆத்ரேய / கிருஷ்ணாத்ரேய", Telugu: "ఆత్రేయ / కృష్ణాత్రేయ" },
-  "Vadhbhutaka": { English: "Vadhbhutaka", Hindi: "वाद्भूतक", Tamil: "வாத்பூதக", Telugu: "వాద్భూతక" },
-  "Gavisthiras": { English: "Gavisthiras", Hindi: "गाविष्ठिर", Tamil: "காவிஷ்டிர", Telugu: "గావిష్ఠిర" },
-  "Koushika": { English: "Koushika", Hindi: "कौशिक", Tamil: "கௌஸிக", Telugu: "కౌశిక" },
+  "Vadhbhutaka": { English: "Vadhbhutaka", Hindi: "वाद्भूतక", Tamil: "வாத்பூதக", Telugu: "వాద్భూతక" },
+  "Gavisthiras": { English: "Gavisthiras", Hindi: "గావిష్ఠిర", Tamil: "காவிஷ்டிர", Telugu: "గావిష్ఠిర" },
   "Kalabodhana": { English: "Kalabodhana", Hindi: "कालबोधन", Tamil: "காலபோதன", Telugu: "కాలబోధన" },
-  "Bhargava": { English: "Bhargava", Hindi: "भार्गव", Tamil: "பார்க்கవ", Telugu: "భార్గవ" },
+  "Bhargava": { English: "Bhargava", Hindi: "भార్గవ", Tamil: "பார்க்கవ", Telugu: "భార్గవ" },
   "Viswamitra": { English: "Viswamitra", Hindi: "विश्वामित्र", Tamil: "விஸ்வாமித்ர", Telugu: "విశ్వామిత్ర" },
-  "Kowndinya": { English: "Kowndinya", Hindi: "कौण्डिन्य", Tamil: "கௌண்டின்ய", Telugu: "కౌండిన్య" },
-  "Kapinjala": { English: "Kapinjala", Hindi: "कपिञ्जल", Tamil: "கபிஞ்ஜல", Telugu: "కపింజల" },
-  "Vashista": { English: "Vashista", Hindi: "वशिष्ठ", Tamil: "வஸிஷ்ட", Telugu: "వశిష్ఠ" },
-  "Haritasa": { English: "Haritasa", Hindi: "हारितस", Tamil: "ஹாரிதஸ", Telugu: "హారితస" },
-  "Gautamasa": { English: "Gautamasa", Hindi: "गौतमस", Tamil: "கௌதமஸ", Telugu: "గౌతమస" },
-  "Mowdgalya": { English: "Mowdgalya", Hindi: "मौद्गल्य", Tamil: "மௌத்கல்ய", Telugu: "మౌద్గల్య" },
-  "Sandilya": { English: "Sandilya", Hindi: "शाण्डिल्य", Tamil: "ஸாண்டில்ய", Telugu: "శాండిల్య" },
-  "Naitruvakaasyapa": { English: "Naitruvakaasyapa", Hindi: "नैध्रुव काश्यप", Tamil: "நைத்ருவ காஸ்யப", Telugu: "నైధ్రువ కాశ్యప" },
-  "Kutsa": { English: "Kutsa", Hindi: "कुत्स", Tamil: "குத்ஸ", Telugu: "కుత్స" },
-  "Kapi": { English: "Kapi", Hindi: "कपि", Tamil: "கபி", Telugu: "కపి" },
+  "Kapinjala": { English: "Kapinjala", Hindi: "కపిञ్జల", Tamil: "கபிஞ்ஜல", Telugu: "కపింజల" },
+  "Gautamasa": { English: "Gautamasa", Hindi: "गौतमస", Tamil: "கௌతమஸ", Telugu: "గౌతమస" },
+  "Naitruvakaasyapa": { English: "Naitruvakaasyapa", Hindi: "नैध్రువ కాశ్యప", Tamil: "நைத்ருவ காஸ்யப", Telugu: "నైధ్రువ కాశ్యప" },
+  "Kutsa": { English: "Kutsa", Hindi: "కుత్స", Tamil: "குத்ஸ", Telugu: "కుత్స" },
+  "Kapi": { English: "Kapi", Hindi: "కపి", Tamil: "கపి", Telugu: "కపి" },
   "Kapila": { English: "Kapila", Hindi: "कपिल", Tamil: "கபில", Telugu: "కపిల" },
-  "Kanva": { English: "Kanva", Hindi: "कण्व", Tamil: "கண்வ", Telugu: "కణ్వ" },
+  "Kanva": { English: "Kanva", Hindi: "కణ్వ", Tamil: "கண்வ", Telugu: "కణ్వ" },
   "Paraasara": { English: "Paraasara", Hindi: "पराशर", Tamil: "பராஸர", Telugu: "పరాశర" },
   "Upamanyu": { English: "Upamanyu", Hindi: "उपमन्यु", Tamil: "உபமன்யு", Telugu: "ఉపమన్యు" },
   "Aagastya": { English: "Aagastya", Hindi: "अगस्त्य", Tamil: "அகஸ்த்ய", Telugu: "అగస్త్య" },
-  "Gargyasa": { English: "Gargyasa", Hindi: "गार्ग्यस", Tamil: "கார்க்யஸ", Telugu: "గార్గ్యస" },
-  "Bhadarayana": { English: "Bhadarayana", Hindi: "बादरायण", Tamil: "பாதராயண", Telugu: "బాదరాయణ" },
-  "Kashyapa": { English: "Kashyapa", Hindi: "कश्यप", Tamil: "கஸ்யப", Telugu: "కశ్యప" },
+  "Gargyasa": { English: "Gargyasa", Hindi: "గార్గ్యస", Tamil: "கார்க்யஸ", Telugu: "గార్గ్యస" },
+  "Bhadarayana": { English: "Bhadarayana", Hindi: "బాద్ రాయణ", Tamil: "பாதராயண", Telugu: "బాదరాయణ" },
   "Sankriti": { English: "Sankriti", Hindi: "सांकृति", Tamil: "ஸாங்க்ருதி", Telugu: "సాంకృతి" },
   "Suryadhwaja": { English: "Suryadhwaja", Hindi: "सूर्यध्वज", Tamil: "ஸூர்யத்வஜ", Telugu: "సూర్యధ్వజ" },
   "Daivaratasa": { English: "Daivaratasa", Hindi: "दैवरातस", Tamil: "தைவராதஸ", Telugu: "దైవరాతస" },
-  "chikitasa": { English: "Chikitasa", Hindi: "चिकितास", Tamil: " சிகிதாஸ", Telugu: "చికీతాస" },
-  "Angirasa": { English: "Angirasa", Hindi: "आङ्गिरस", Tamil: "ஆங்கிரஸ", Telugu: "ఆంగిరస" },
-  "Ayasya": { English: "Ayasya", Hindi: "आयास्य", Tamil: "ஆயாஸ்ய", Telugu: "ఆయాస్య" },
+  "chikitasa": { English: "Chikitasa", Hindi: "చికితాస", Tamil: " சிகிதாஸ", Telugu: "చికీతాస" },
+  "Angirasa": { English: "Angirasa", Hindi: "ఆంగిరస", Tamil: "ஆங்கிரஸ", Telugu: "ఆంగిరస" },
+  "Ayasya": { English: "Ayasya", Hindi: "ఆయాస్య", Tamil: "ఆయాஸ்ய", Telugu: "ఆయాస్య" },
   "Bhaarhaspatya": { English: "Bhaarhaspatya", Hindi: "बार्हस्पत्य", Tamil: "பார்ஹஸ்பத்ய", Telugu: "బార్హస్పత్య" },
-  "Vaitahavya": { English: "Vaitahavya", Hindi: "वैतहव्य", Tamil: "வைதஹவ்ய", Telugu: "వైతహవ్య" },
-  "Saavedasa": { English: "Saavedasa", Hindi: "सावेदस", Tamil: "ஸாவேதஸ", Telugu: "ஸாவேதஸ" },
+  "Vaitahavya": { English: "Vaitahavya", Hindi: "వైతహవ్య", Tamil: "వైతஹவ்ய", Telugu: "వైతహవ్య" },
+  "Saavedasa": { English: "Saavedasa", Hindi: "సావేదస", Tamil: "ஸாவேதஸ", Telugu: "సావేదస" },
   "Daivodasa": { English: "Daivodasa", Hindi: "दैवोदास", Tamil: "தைவோதாஸ", Telugu: "దైవోదాస" },
-  "Vadhryasva": { English: "Vadhryasva", Hindi: "वध्र्यश्व", Tamil: "வத்ர்யஸ்வ", Telugu: "வத்ர்யஸ்வ" },
+  "Vadhryasva": { English: "Vadhryasva", Hindi: "వధ్ర్యశ్వ", Tamil: "வத்ர்யஸ்வ", Telugu: "వధ్ర్యశ్వ" },
   "Shaunaka(ekarsheya)": { English: "Shaunaka", Hindi: "शौनक", Tamil: "ஸௌனக", Telugu: "శౌనక" },
-  "Sunahotra": { English: "Sunahotra", Hindi: "शुनहोत्र", Tamil: "ஸுனஹோத்ர", Telugu: "శునహోత్ర" },
-  "Chyavana": { English: "Chyavana", Hindi: "च्यवन", Tamil: "ச்யவன", Telugu: "ச்யவன" },
-  "Apnavana": { English: "Apnavana", Hindi: "आप्नवान", Tamil: "ஆப்னவான", Telugu: "ஆப்னவான" },
-  "Apnuvat": { English: "Apnuvat", Hindi: "आप्नुवत्", Tamil: "ஆப்னுவத்", Telugu: "ఆప్నువత్" },
-  "Aurava": { English: "Aurava", Hindi: "और्व", Tamil: "ஔர்வ", Telugu: "ఔర్వ" },
-  "Jamadagnya": { English: "Jamadagnya", Hindi: "जामदग्न्य", Tamil: "ஜாமதக்ன்ய", Telugu: "జామదగ్న్య" },
-  "Anupa": { English: "Anupa", Hindi: "अनूप", Tamil: "அனூப", Telugu: "అనూప" },
-  "Baida": { English: "Baida", Hindi: "बैद", Tamil: "பைத", Telugu: "பைத" },
-  "Powrukutsa": { English: "Powrukutsa", Hindi: "पौरुकुत्स", Tamil: "பௌருகுத்ஸ", Telugu: "பௌருகுத்ஸ" },
-  "Traasatasya": { English: "Traasatasya", Hindi: "त्रासदस्य", Tamil: "த்ராஸதஸ்ய", Telugu: "త్రాసదస్య" },
-  "Atreya": { English: "Atreya", Hindi: "आत्रेय", Tamil: "ஆத்ரேய", Telugu: "ఆత్రేయ" },
-  "Aarchanaasa": { English: "Aarchanaasa", Hindi: "आर्चरासन", Tamil: "ஆர்சனாஸ", Telugu: "ஆர்சனாஸ" },
-  "Syaavaasva": { English: "Syaavaasva", Hindi: "श्यावाश्व", Tamil: "ஸ்யாவாஸ்வ", Telugu: "శ్యావాశ్వ" },
-  "Gavisthira": { English: "Gavisthira", Hindi: "गाविष्ठिर", Tamil: "காவிஷ்டிர", Telugu: "గావిష్ఠిర" },
-  "Purvatitha": { English: "Purvatitha", Hindi: "पूर्वातिथि", Tamil: "பூர்வாதிதி", Telugu: "పూర్వాతిథి" },
-  "Vaiswaamitra": { English: "Vaiswaamitra", Hindi: "वैश्वामित्र", Tamil: "வைஸ்வாமித்ர", Telugu: "వైశ్వామిత్ర" },
-  "Aghamarshana": { English: "Aghamarshana", Hindi: "अघमर्षण", Tamil: "அகமர்ஷண", Telugu: "అఘమర్షణ" },
-  "AAgamarshana": { English: "Aghamarshana", Hindi: "अघमर्षण", Tamil: "அகமர்ஷண", Telugu: "అఘమర్షణ" },
-  "Tvashta": { English: "Tvashta", Hindi: "त्वष्टा", Tamil: "த்வஷ்டா", Telugu: "త్వష్టా" },
-  "Vishvaroopa": { English: "Vishvaroopa", Hindi: "विश्वरूप", Tamil: "விஸ்வரூப", Telugu: "விశ్వరూప" },
-  "Devaraata": { English: "Devaraata", Hindi: "देवरात", Tamil: "தேவராத", Telugu: "దేవరాత" },
-  "Owtala": { English: "Owtala", Hindi: "औतल", Tamil: "ஔதல", Telugu: "ఔతల" },
-  "Maitraavaruna": { English: "Maitraavaruna", Hindi: "मैत्रावरुण", Tamil: "மைத்ராவருண", Telugu: "మైత్రావరుణ" },
-  "Aindrapramada": { English: "Aindrapramada", Hindi: "ऐन्द्रप्रमद", Tamil: "ஐந்த்ரப்ரமத", Telugu: "ఐంద్రప్రమద" },
-  "Abharadvasavya": { English: "Abharadvasavya", Hindi: "आभरद्वसु", Tamil: "ஆபரத்வஸவ்ய", Telugu: "ఆభరద్వసవ్య" },
-  "Vashista(ekarsheya)": { English: "Vashista", Hindi: "वशिष्ठ", Tamil: "वஸிஷ்ட", Telugu: "వశిష్ఠ" },
-  "Harita": { English: "Harita", Hindi: "हारित", Tamil: "ஹாரித", Telugu: "హారిత" },
+  "Sunahotra": { English: "Sunahotra", Hindi: "శునహోత్ర", Tamil: "ஸுனஹோத்ர", Telugu: "శునహోత్ర" },
+  "Chyavana": { English: "Chyavana", Hindi: "చ్యవన", Tamil: "ச்யவன", Telugu: "చ్యవన" },
+  "Apnavana": { English: "Apnavana", Hindi: "ఆప్నవాన", Tamil: "ஆப்னவான", Telugu: "ఆప్నవాన" },
+  "Apnuvat": { English: "Apnuvat", Hindi: "ఆప్నువత్", Tamil: "ஆப்னுవత్", Telugu: "ఆప్నువత్" },
+  "Aurava": { English: "Aurava", Hindi: "ఔర్వ", Tamil: "ஔர்வ", Telugu: "ఔర్వ" },
+  "Jamadagnya": { English: "Jamadagnya", Hindi: "జామదగ్న్య", Tamil: "ஜாமతక్న్య", Telugu: "జామదగ్న్య" },
+  "Anupa": { English: "Anupa", Hindi: "అనూప", Tamil: "அனூப", Telugu: "అనూప" },
+  "Baida": { English: "Baida", Hindi: "బైద", Tamil: "பைத", Telugu: "బైద" },
+  "Powrukutsa": { English: "Powrukutsa", Hindi: "पौरुकुत्स", Tamil: "பௌருகுத்ஸ", Telugu: "పౌరుకుత్స" },
+  "Traasatasya": { English: "Traasatasya", Hindi: "త్రాసదస్య", Tamil: "த்ராஸதஸ்ய", Telugu: "త్రాసదస్య" },
+  "Aarchanaasa": { English: "Aarchanaasa", Hindi: "ఆర్చనాస", Tamil: "ஆர்సనాஸ", Telugu: "ఆర్చనాస" },
+  "Syaavaasva": { English: "Syaavaasva", Hindi: "శ్యావాశ్వ", Tamil: "ஸ்யாவாஸ்வ", Telugu: "శ్యావాశ్వ" },
+  "Gavisthira": { English: "Gavisthira", Hindi: "గావిష్ఠిర", Tamil: "காவிஷ்டிர", Telugu: "గావిష్ఠిర" },
+  "Purvatitha": { English: "Purvatitha", Hindi: "పూర్వాతిథి", Tamil: "బూర్వాతిథి", Telugu: "పూర్వాతిథి" },
+  "Vaiswaamitra": { English: "Vaiswaamitra", Hindi: "వైశ్వామిత్ర", Tamil: "வைஸ்வாமித்ர", Telugu: "వైశ్వామిత్ర" },
+  "Aghamarshana": { English: "Aghamarshana", Hindi: "అఘమర్షణ", Tamil: "அகமர்ஷண", Telugu: "అఘమర్షణ" },
+  "AAgamarshana": { English: "AAgamarshana", Hindi: "అఘమర్షణ", Tamil: "அகமர்ஷண", Telugu: "అఘమర్షణ" },
+  "Tvashta": { English: "Tvashta", Hindi: "త్వష్టా", Tamil: "த்வஷ்டா", Telugu: "త్వష్టా" },
+  "Vishvaroopa": { English: "Vishvaroopa", Hindi: "విశ్వరూప", Tamil: "விஸ்வரூப", Telugu: "విశ్వరూప" },
+  "Devaraata": { English: "Devaraata", Hindi: "దేవరాాత", Tamil: "தேவராத", Telugu: "దేవరాత" },
+  "Owtala": { English: "Owtala", Hindi: "ఔతల", Tamil: "ஔதல", Telugu: "ఔతల" },
+  "Maitraavaruna": { English: "Maitraavaruna", Hindi: "మైత్రావరుణ", Tamil: "మైత్రావరుణ", Telugu: "మైత్రావరుణ" },
+  "Aindrapramada": { English: "Aindrapramada", Hindi: "ఐంద్రప్రమద", Tamil: "ఐంద్రప్రమద", Telugu: "ఐంద్రప్రమద" },
+  "Abharadvasavya": { English: "Abharadvasavya", Hindi: "ఆభరద్వసవ్య", Tamil: "ஆபரத்வஸவ்ய", Telugu: "ఆభరద్వసవ్య" },
+  "Vashista(ekarsheya)": { English: "Vashista", Hindi: "వశిష్ఠ", Tamil: "వஸிష్ట", Telugu: "వశిష్ఠ" },
+  "Harita": { English: "Harita", Hindi: "హారిత", Tamil: "ஹாரின", Telugu: "హారిత" },
   "Ambarisha": { English: "Ambarisha", Hindi: "अम्बरीष", Tamil: "அம்பரீஷ", Telugu: "అంబరీష" },
-  "Yuvanasva": { English: "Yuvanasva", Hindi: "युवनाश्व", Tamil: "யுவனாస్వ", Telugu: "యువనాశ్వ" },
-  "Aayasyasa": { English: "Aayasyasa", Hindi: "आयास्य", Tamil: "ஆயாஸ்ய", Telugu: "ఆయాస్య" },
-  "Gautama": { English: "Gautama", Hindi: "गौतम", Tamil: "கௌதம", Telugu: "గౌతమ" },
-  "Bharmyasva": { English: "Bharmyasva", Hindi: "भार्म्यश्व", Tamil: "பார்ம்யஸ்வ", Telugu: "భార్మ్యశ్వ" },
+  "Yuvanasva": { English: "Yuvanasva", Hindi: "యువనాశ్వ", Tamil: "యువనాశ్వ", Telugu: "యువనాశ్వ" },
+  "Aayasyasa": { English: "Aayasyasa", Hindi: "आयास्य", Tamil: "ஆயாస్య", Telugu: "ఆయాస్య" },
+  "Gautama": { English: "Gautama", Hindi: "గౌతమ", Tamil: "கௌதம", Telugu: "గౌతమ" },
+  "Bharmyasva": { English: "Bharmyasva", Hindi: "भार्म्यశ్వ", Tamil: "பார்ம்யஸ்வ", Telugu: "భార్మ్యశ్వ" },
   "Tarkshya": { English: "Tarkshya", Hindi: "तार्क्ष्य", Tamil: "தார்க்ஷ்ய", Telugu: "తార్క్ష్య" },
-  "Dhavya": { English: "Dhavya", Hindi: "धाव्य", Tamil: "தாவ்ய", Telugu: "ధావ్య" },
-  "Aavatsaara": { English: "Aavatsaara", Hindi: "आवत्सार", Tamil: "ஆவத்ஸார", Telugu: "ఆవత్సార" },
+  "Dhavya": { English: "Dhavya", Hindi: "ధావ्य", Tamil: "తాavy", Telugu: "ధావ్య" },
+  "Aavatsaara": { English: "Aavatsaara", Hindi: "आवत्सാര", Tamil: "ஆவத்ஸார", Telugu: "ఆవత్సార" },
   "Daivala": { English: "Daivala", Hindi: "दैवल", Tamil: "தைவல", Telugu: "దైవల" },
   "Asitha": { English: "Asitha", Hindi: "असित", Tamil: "அஸித", Telugu: "అసిత" },
   "Aavatsara": { English: "Aavatsara", Hindi: "आवत्सार", Tamil: "ஆவத்ஸார", Telugu: "ఆవత్సార" },
-  "Naitruva": { English: "Naitruva", Hindi: "नैध्रुव", Tamil: "நைத்ருவ", Telugu: "నైధ్రువ" },
-  "Aangirasa": { English: "Angirasa", Hindi: "आङ्गिरस", Tamil: "ஆங்கிரஸ", Telugu: "ఆంగిరస" },
-  "Maandhatra": { English: "Maandhatra", Hindi: "मान्धातृ", Tamil: "மாந்தாத்ரு", Telugu: "మాంధాతృ" },
-  "Koutsa": { English: "Koutsa", Hindi: "कुत्स", Tamil: "குத்ஸ", Telugu: "కుత్స" },
-  "Aamahaiya": { English: "Aamahaiya", Hindi: "आमहैय", Tamil: "ஆமஹைய", Telugu: "ఆమహైయ" },
-  "Orukshaya": { English: "Orukshaya", Hindi: "औरुक्षय", Tamil: "ஔருக்ஷய", Telugu: "ఔరుక్షయ" },
-  "Ajameeda": { English: "Ajameeda", Hindi: "अजमीढ", Tamil: "அஜமீட", Telugu: "అజమీఢ" },
-  "Kaanva": { English: "Kaanva", Hindi: "काण्व", Tamil: "காண்வ", Telugu: "కాణ్వ" },
-  "Kowra": { English: "Kowra", Hindi: "कौर", Tamil: "கௌர", Telugu: "కౌర" },
-  "Saaktya": { English: "Saaktya", Hindi: "शाक्त्य", Tamil: "ஸாக்த்ய", Telugu: "శాక్త్య" },
-  "Paarasarya": { English: "Paarasarya", Hindi: "पाराशर्य", Tamil: "பாராஸர்ய", Telugu: "పారాశర్య" },
-  "Bhadravasavya": { English: "Bhadravasavya", Hindi: "भद्रवसव", Tamil: "பத்ரவஸவ்ய", Telugu: "భద్రవసవ్య" },
-  "Tardhachyuta": { English: "Tardhachyuta", Hindi: "दार्ढच्युत", Tamil: "தார்டச்யுத", Telugu: "దార్ఢच్యుత" },
-  "Sowmavaha": { English: "Sowmavaha", Hindi: "सोमवाह", Tamil: "ஸோமவாஹ", Telugu: "సోమవాహ" },
-  "Sainya": { English: "Sainya", Hindi: "सैन्य", Tamil: "ஸைன்ய", Telugu: "సైన్య" },
-  "Gaargya": { English: "Gaargya", Hindi: "गार्ग्य", Tamil: "கார்க்ய", Telugu: "గార్గ్య" },
-  "Paarshadaswa": { English: "Paarshadaswa", Hindi: "पार्षदश्व", Tamil: "பார்ஷதస్வ", Telugu: "పార్షదశ్వ" },
-  "Raatitara": { English: "Raatitara", Hindi: "राथीतर", Tamil: "ராதீதர", Telugu: "రాథీతర" },
-  "Kowravidha": { English: "Kowravidha", Hindi: "कौरविध", Tamil: "கௌரவித", Telugu: "కౌరవిధ" },
-  "Saankritya": { English: "Saankritya", Hindi: "सांकृत्य", Tamil: "ஸாங்க்ருத்ய", Telugu: "సాంకృత్య" },
-  "Sadhya": { English: "Sadhya", Hindi: "साध्य", Tamil: "ஸாத்ய", Telugu: "సాధ్య" },
-  "Lakhi (Mehrishi)": { English: "Lakhi", Hindi: "लखी", Tamil: "லகி", Telugu: "లఖీ" },
-  "Soral": { English: "Soral", Hindi: "सोराल", Tamil: "ஸோரால்", Telugu: "సోరాల్" },
-  "Binju": { English: "Binju", Hindi: "बिंजु", Tamil: "பிஞ்சு", Telugu: "బింజు" },
-  "Avudhala": { English: "Avudhala", Hindi: "अवधल", Tamil: "அவதல", Telugu: "అవధల" },
+  "Naitruva": { English: "Naitruva", Hindi: "నైధ్రువ", Tamil: "నైధ్రువ", Telugu: "నైధ్రువ" },
+  "Aangirasa": { English: "Aangirasa", Hindi: "ఆంగిరస", Tamil: "ఆంగిరస", Telugu: "ఆంగిరస" },
+  "Maandhatra": { English: "Maandhatra", Hindi: "మాంధాతృ", Tamil: "మాంధాతృ", Telugu: "మాంధాతృ" },
+  "Koutsa": { English: "Koutsa", Hindi: "కౌత్స", Tamil: "కుత్స", Telugu: "కౌత్స" },
+  "Aamahaiya": { English: "Aamahaiya", Hindi: "ఆమహైయ", Tamil: "ఆమహైయ", Telugu: "ఆమహైయ" },
+  "Orukshaya": { English: "Orukshaya", Hindi: "ఔరుక్షయ", Tamil: "ஔருக்ஷய", Telugu: "ఔరుక్షయ" },
+  "Ajameeda": { English: "Ajameeda", Hindi: "అజమీఢ", Tamil: "అజమీడ", Telugu: "అజమీఢ" },
+  "Kaanva": { English: "Kaanva", Hindi: "కాణ్వ", Tamil: "కాణ్వ", Telugu: "కాణ్వ" },
+  "Kowra": { English: "Kowra", Hindi: "కౌర", Tamil: "కౌర", Telugu: "కౌర" },
+  "Saaktya": { English: "Saaktya", Hindi: "శాక్త్య", Tamil: "శాక్త్య", Telugu: "శాక్త్య" },
+  "Paarasarya": { English: "Paarasarya", Hindi: "పారాశర్య", Tamil: "పారాశర్య", Telugu: "పారాశర్య" },
+  "Bhadravasavya": { English: "Bhadravasavya", Hindi: "భద్రవసవ్య", Tamil: "భద్రవసవ్య", Telugu: "భద్రవసవ్య" },
+  "Tardhachyuta": { English: "Tardhachyuta", Hindi: "దార్ఢచ్యూత", Tamil: "దార్ఢచ్యూత", Telugu: "దార్ఢచ్యూత" },
+  "Sowmavaha": { English: "Sowmavaha", Hindi: "సోమవాహ", Tamil: "సోమవాహ", Telugu: "సోమవాహ" },
+  "Sainya": { English: "Sainya", Hindi: "సైన్య", Tamil: "సైన్య", Telugu: "సైన్య" },
+  "Gaargya": { English: "Gaargya", Hindi: "గార్గ్య", Tamil: "గార్గ్య", Telugu: "గార్గ్య" },
+  "Paarshadaswa": { English: "Paarshadaswa", Hindi: "పార్షదశ్వ", Tamil: "పార్షదశ్వ", Telugu: "పార్షదశ్వ" },
+  "Raatitara": { English: "Raatitara", Hindi: "రాథీతర", Tamil: "రాథీతర", Telugu: "రాథీతర" },
+  "Kowravidha": { English: "Kowravidha", Hindi: "కౌరవిధ", Tamil: "కౌరవిధ", Telugu: "కౌరవిధ" },
+  "Saankritya": { English: "Saankritya", Hindi: "సాంకృత్య", Tamil: "సాంకృత్య", Telugu: "సాంకృత్య" },
+  "Sadhya": { English: "Sadhya", Hindi: "సాధ్య", Tamil: "సాధ్య", Telugu: "సాధ్య" },
+  "Lakhi (Mehrishi)": { English: "Lakhi", Hindi: "లఖీ", Tamil: "లఖీ", Telugu: "లఖీ" },
+  "Soral": { English: "Soral", Hindi: "సోరాల్", Tamil: "సోరాల్", Telugu: "సోరాల్" },
+  "Binju": { English: "Binju", Hindi: "బింజు", Tamil: "బింజు", Telugu: "బింజు" },
+  "Avudhala": { English: "Avudhala", Hindi: "అవధల", Tamil: "అవధల", Telugu: "అవధల" },
 };
+
+const NORMALIZED_MAPPINGS: Record<string, Record<Language, string>> = Object.fromEntries(
+  Object.entries(COMMON_MAPPINGS).map(([key, value]) => [key.toLowerCase().trim(), value])
+);
 
 const PRAVARA_EN_MAP: Record<number, string> = {
   1: "Ekarsheya",
@@ -292,7 +296,7 @@ const transliteratePhonetic = (name: string, lang: Language): string => {
   const knownNames: Record<string, Record<Language, string>> = {
     "rama": { English: "Rama", Hindi: "राम", Tamil: "ராம", Telugu: "రామ" },
     "krishna": { English: "Krishna", Hindi: "कृष्ण", Tamil: "கிருஷ்ண", Telugu: "కృష్ణ" },
-    "siva": { English: "Siva", Hindi: "शिव", Tamil: "ஸிவ", Telugu: "శివ" },
+    "siva": { English: "Siva", Hindi: "शिव", Tamil: "ஸிవ", Telugu: "శివ" },
     "vishnu": { English: "Vishnu", Hindi: "विष्णु", Tamil: "விஷ்ணு", Telugu: "విష్ణు" },
     "venkatesh": { English: "Venkatesh", Hindi: "वेङ्कटेश", Tamil: "வேங்கடேஷ்", Telugu: "వేంకటేశ్" },
   };
@@ -448,7 +452,14 @@ const App: React.FC = () => {
       });
   };
 
-  const translate = (term: string, lang: Language): string => lang === 'English' ? term : COMMON_MAPPINGS[term]?.[lang] || term;
+  const translate = (term: string, lang: Language): string => {
+    if (lang === 'English') return term;
+    const lowerTerm = term.toLowerCase().trim();
+    const entry = NORMALIZED_MAPPINGS[lowerTerm];
+    if (entry && entry[lang]) return entry[lang];
+    if (entry) return entry.English || term;
+    return term;
+  };
 
   const getGeneratedText = (lang: Language) => {
     if (!selectedGothraData) return "";
@@ -714,35 +725,35 @@ const App: React.FC = () => {
                 }} className="action-btn wa-btn"><FaWhatsapp /> WhatsApp</button>
               </div>
             </div>
-<div className="meaning-card">
-  <h4>Meaning & Significance</h4>
-  <p className="meaning-text">{generateTranslation()}</p>
-</div>
-</div>
-)}
+            <div className="meaning-card">
+              <h4>Meaning & Significance</h4>
+              <p className="meaning-text">{generateTranslation()}</p>
+            </div>
+          </div>
+        )}
 
-<div className="faq-section">
-<h2 className="faq-title">Decoding the Ritual: <span>Secrets of the Sages</span></h2>
-<div className="faq-grid">
-{FAQ_DATA.map((item, idx) => (
-  <div 
-    key={idx} 
-    className={`faq-item ${activeFaq === idx ? 'active' : ''}`}
-    onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
-  >
-    <div className="faq-question">
-      {item.question}
-      <span className="faq-icon">{activeFaq === idx ? '−' : '+'}</span>
-    </div>
-    {activeFaq === idx && (
-      <div className="faq-answer animate-fade-in">
-        {item.answer}
-      </div>
-    )}
-  </div>
-))}
-</div>
-</div>
+        <div className="faq-section">
+          <h2 className="faq-title">Decoding the Ritual: <span>Secrets of the Sages</span></h2>
+          <div className="faq-grid">
+            {FAQ_DATA.map((item, idx) => (
+              <div 
+                key={idx} 
+                className={`faq-item ${activeFaq === idx ? 'active' : ''}`}
+                onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
+              >
+                <div className="faq-question">
+                  {item.question}
+                  <span className="faq-icon">{activeFaq === idx ? '−' : '+'}</span>
+                </div>
+                {activeFaq === idx && (
+                  <div className="faq-answer animate-fade-in">
+                    {item.answer}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
 
         <form 
           className="feedback-section-new" 
