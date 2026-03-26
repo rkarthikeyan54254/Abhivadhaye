@@ -377,6 +377,94 @@ body {
   background: var(--accent-hover);
 }
 
+/* --- Tab Switcher --- */
+.tab-switcher {
+  display: flex;
+  background: var(--bg-color);
+  padding: 5px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  border: 1px solid var(--border-color);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.tab-btn.active {
+  background: var(--card-bg);
+  color: var(--accent-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Guided Lookup --- */
+.lineage-results {
+  margin-top: 15px;
+  min-height: 100px;
+}
+
+.lineage-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.lineage-card {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  padding: 15px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lineage-card:hover {
+  border-color: var(--accent-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 153, 51, 0.1);
+}
+
+.lc-gothra {
+  font-weight: 700;
+  color: var(--accent-color);
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+
+.lc-rishis {
+  font-size: 0.9rem;
+  color: var(--text-main);
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+
+.lc-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.search-hint, .no-results {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 20px;
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+}
+
 /* --- Results --- */
 .result-card {
   background: linear-gradient(145deg, #1e1e1e, #141414);

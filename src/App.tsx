@@ -296,6 +296,8 @@ const App: React.FC = () => {
   const [pageVisits, setPageVisits] = useState(0);
   const [factIndex, setFactIndex] = useState(0);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'expert' | 'guided'>('expert');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     // Calculate visits based on time since a reference date (Jan 1, 2026)
@@ -354,6 +356,35 @@ const App: React.FC = () => {
       )
     ].sort();
   }, [selectedVeda]);
+
+  const filteredLineages = useMemo(() => {
+    if (!searchQuery || searchQuery.length < 2) return [];
+    const q = searchQuery.toLowerCase();
+    return abhivadhayeData.filter(item => 
+      item.Gothra.toLowerCase().includes(q) ||
+      item.Rishi1.toLowerCase().includes(q) ||
+      item.Rishi2.toLowerCase().includes(q) ||
+      item.Rishi3.toLowerCase().includes(q)
+    ).slice(0, 10);
+  }, [searchQuery]);
+
+  const handleSelectLineage = (item: AbhivadhayeRecord) => {
+    const cleanGothra = item.Gothra.replace(/\s\d+$/, '');
+    setSelectedGothraName(cleanGothra);
+    
+    // Find the variation index
+    const variations = abhivadhayeData.filter(v => v.Gothra.startsWith(cleanGothra));
+    const idx = variations.findIndex(v => v.Rishi1 === item.Rishi1 && v.Rishi2 === item.Rishi2 && v.Rishi3 === item.Rishi3);
+    
+    setSelectedVariationIndex(idx >= 0 ? idx : 0);
+    setSelectedVeda(item.Veda);
+    setSelectedSuthra(item.Suthra);
+    setSearchQuery('');
+    setActiveTab('expert'); // Switch back to see the selection or keep in mind it's filled
+    setTimeout(() => {
+      document.querySelector('.glow-button')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
 
   const handleGenerate = () => {
     if (selectedGothraData && name && selectedVeda && selectedSuthra) {
@@ -449,69 +480,126 @@ const App: React.FC = () => {
 
         <div className="main-content-layout">
           <div className="form-card card-shadow">
-            <div className="form-group">
-              <label><FaInfoCircle /> Select Your Gothra</label>
-              <Select
-                options={uniqueGothraNames.map((g) => ({ value: g, label: g }))}
-                onChange={(opt) => { 
-                  const val = (opt as SelectOption)?.value || '';
-                  setSelectedGothraName(val); 
-                  setSelectedVariationIndex(0); 
-                  setIsGenerated(false); 
-                }}
-                placeholder="Search your Gothra..."
-                className="custom-select"
-                classNamePrefix="react-select"
-              />
+            <div className="tab-switcher">
+              <button 
+                className={`tab-btn ${activeTab === 'expert' ? 'active' : ''}`}
+                onClick={() => setActiveTab('expert')}
+              >
+                I know my details
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'guided' ? 'active' : ''}`}
+                onClick={() => setActiveTab('guided')}
+              >
+                Help me find my lineage
+              </button>
             </div>
 
-            {availableVariations.length > 1 && (
-              <div className="variation-panel">
-                <p className="panel-label"><FaInfoCircle /> Choose your family's Rishi combination:</p>
-                <div className="variation-grid">
-                  {availableVariations.map((v: AbhivadhayeRecord, idx: number) => (
-                    <div 
-                      key={idx} 
-                      className={`variation-chip ${selectedVariationIndex === idx ? 'active' : ''}`} 
-                      onClick={() => { setSelectedVariationIndex(idx); setIsGenerated(false); }}
-                    >
-                      {[v.Rishi1, v.Rishi2, v.Rishi3].filter(Boolean).join(", ")}
+            {activeTab === 'expert' ? (
+              <div className="animate-fade-in">
+                <div className="form-group">
+                  <label><FaInfoCircle /> Select Your Gothra</label>
+                  <Select
+                    value={selectedGothraName ? { value: selectedGothraName, label: selectedGothraName } : null}
+                    options={uniqueGothraNames.map((g) => ({ value: g, label: g }))}
+                    onChange={(opt) => { 
+                      const val = (opt as SelectOption)?.value || '';
+                      setSelectedGothraName(val); 
+                      setSelectedVariationIndex(0); 
+                      setIsGenerated(false); 
+                    }}
+                    placeholder="Search your Gothra..."
+                    className="custom-select"
+                    classNamePrefix="react-select"
+                  />
+                </div>
+
+                {availableVariations.length > 1 && (
+                  <div className="variation-panel">
+                    <p className="panel-label"><FaInfoCircle /> Choose your family's Rishi combination:</p>
+                    <div className="variation-grid">
+                      {availableVariations.map((v: AbhivadhayeRecord, idx: number) => (
+                        <div 
+                          key={idx} 
+                          className={`variation-chip ${selectedVariationIndex === idx ? 'active' : ''}`} 
+                          onClick={() => { setSelectedVariationIndex(idx); setIsGenerated(false); }}
+                        >
+                          {[v.Rishi1, v.Rishi2, v.Rishi3].filter(Boolean).join(", ")}
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                )}
+
+                <div className="form-row">
+                  <div className="form-group flex-1">
+                    <label>Veda</label>
+                    <Select 
+                      value={selectedVeda ? { value: selectedVeda, label: selectedVeda } : null}
+                      options={uniqueVedas.map((v) => ({ value: v, label: v }))} 
+                      onChange={(opt) => { 
+                        const val = (opt as SelectOption)?.value || '';
+                        setSelectedVeda(val); 
+                        setIsGenerated(false); 
+                      }} 
+                      placeholder="Select Veda" 
+                      className="custom-select" 
+                      classNamePrefix="react-select"
+                    />
+                  </div>
+                  <div className="form-group flex-1">
+                    <label>Suthra</label>
+                    <Select 
+                      value={selectedSuthra ? { value: selectedSuthra, label: selectedSuthra } : null}
+                      options={filteredSuthras.map((s) => ({ value: s, label: s }))} 
+                      onChange={(opt) => { 
+                        const val = (opt as SelectOption)?.value || '';
+                        setSelectedSuthra(val); 
+                        setIsGenerated(false); 
+                      }} 
+                      placeholder="Select Suthra" 
+                      className="custom-select" 
+                      classNamePrefix="react-select"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="guided-lookup animate-fade-in">
+                <div className="form-group">
+                  <label><FaInfoCircle /> Search by Gothra or Rishi name</label>
+                  <input 
+                    type="text"
+                    className="custom-input"
+                    placeholder="e.g. Bharadwaja or Angirasa..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                
+                <div className="lineage-results">
+                  {filteredLineages.length > 0 ? (
+                    <div className="lineage-grid">
+                      {filteredLineages.map((item, idx) => (
+                        <div key={idx} className="lineage-card" onClick={() => handleSelectLineage(item)}>
+                          <div className="lc-gothra">{item.Gothra.replace(/\s\d+$/, '')}</div>
+                          <div className="lc-rishis">{[item.Rishi1, item.Rishi2, item.Rishi3].filter(Boolean).join(", ")}</div>
+                          <div className="lc-meta">
+                            <span>{item.Veda || 'Unknown'} Veda</span>
+                            <span>•</span>
+                            <span>{item.Suthra || 'Unknown'} Suthra</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : searchQuery.length >= 2 ? (
+                    <p className="no-results">No exact match found. Try a different spelling or use the expert tab.</p>
+                  ) : (
+                    <p className="search-hint">Start typing your Gothra to see matches...</p>
+                  )}
                 </div>
               </div>
             )}
-
-            <div className="form-row">
-              <div className="form-group flex-1">
-                <label>Veda</label>
-                <Select 
-                  options={uniqueVedas.map((v) => ({ value: v, label: v }))} 
-                  onChange={(opt) => { 
-                    const val = (opt as SelectOption)?.value || '';
-                    setSelectedVeda(val); 
-                    setIsGenerated(false); 
-                  }} 
-                  placeholder="Select Veda" 
-                  className="custom-select" 
-                  classNamePrefix="react-select"
-                />
-              </div>
-              <div className="form-group flex-1">
-                <label>Suthra</label>
-                <Select 
-                  options={filteredSuthras.map((s) => ({ value: s, label: s }))} 
-                  onChange={(opt) => { 
-                    const val = (opt as SelectOption)?.value || '';
-                    setSelectedSuthra(val); 
-                    setIsGenerated(false); 
-                  }} 
-                  placeholder="Select Suthra" 
-                  className="custom-select" 
-                  classNamePrefix="react-select"
-                />
-              </div>
-            </div>
 
             <div className="form-group">
               <label>Your Name (English)</label>
