@@ -581,6 +581,129 @@ body {
   font-size: 1rem;
 }
 
+/* --- Vamsha Bridge --- */
+.vamsha-bridge {
+  margin-top: 50px;
+  background: rgba(255, 153, 51, 0.05);
+  border: 1px solid rgba(255, 153, 51, 0.2);
+  border-radius: 20px;
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.vamsha-bridge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--accent-color);
+}
+
+.vb-content {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+}
+
+.vb-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+  padding-right: 40px;
+  border-right: 1px solid rgba(255, 153, 51, 0.1);
+}
+
+.vb-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.vb-node span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.saptarishi-node svg {
+  font-size: 2.5rem;
+  color: var(--accent-color);
+  filter: drop-shadow(0 0 10px rgba(255, 153, 51, 0.3));
+}
+
+.gothra-node svg {
+  font-size: 1.8rem;
+  color: var(--text-main);
+  background: #333;
+  padding: 10px;
+  border-radius: 50%;
+}
+
+.vb-connector {
+  width: 2px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--accent-color), #333);
+  position: relative;
+}
+
+.vb-connector::after {
+  content: '▼';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: #333;
+}
+
+.vb-text {
+  flex: 1;
+}
+
+.vb-text h3 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  color: #fff;
+  margin-bottom: 15px;
+}
+
+.vb-text p {
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 25px;
+  font-size: 1rem;
+}
+
+.vb-text strong {
+  color: var(--accent-color);
+}
+
+.vb-link-btn {
+  display: inline-block;
+  padding: 12px 24px;
+  background: var(--accent-color);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.vb-link-btn:hover {
+  background: var(--accent-hover);
+  transform: translateX(5px);
+  box-shadow: 0 4px 15px rgba(255, 153, 51, 0.3);
+}
+
 /* --- Feedback --- */
 .feedback-section-new {
   margin-top: 60px;

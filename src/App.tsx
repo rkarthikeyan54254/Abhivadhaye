@@ -489,6 +489,63 @@ const App: React.FC = () => {
     return `\n1. Abhivadaye - I am saluting you.\n2. ${selectedGothraName} gotrah - I belong to the ${selectedGothraName} gotra.\n3. ${rishis.join(", ")} pravaranvita - Names of the Rishis who started ${selectedGothraName} gotra.\n4. ${selectedSuthra} sutrah - the ${selectedSuthra} sutra which I follow.\n5. ${selectedVeda} shakhadhyayi - I learn ${selectedVeda} veda.\n6. Sri ${name} Sharmahamasmi - I am Sri ${name} Sharma.\n7. Bhoh - similar to Sir in English.`.trim();
   };
 
+  const getSaptarishiInfo = () => {
+    if (!selectedGothraData) return null;
+    
+    const gothra = selectedGothraName.toLowerCase();
+    const rishis = [
+      selectedGothraData.Rishi1, 
+      selectedGothraData.Rishi2, 
+      selectedGothraData.Rishi3
+    ].map(r => r?.toLowerCase() || "");
+
+    const mapping = [
+      { 
+        name: "Vasishtha", 
+        url: "https://vamsha.co.in/rishivamsha/vasishtha",
+        triggers: ["vashista", "koundinya", "paraasara", "upamanyu", "kapinjala", "kundina"]
+      },
+      { 
+        name: "Vishwamitra", 
+        url: "https://vamsha.co.in/rishivamsha/vishwamitra",
+        triggers: ["koushika", "viswamitra", "kalabodhana", "chikitasa", "daivaratasa", "devaraata", "aghamarshana"]
+      },
+      { 
+        name: "Bharadvaja", 
+        url: "https://vamsha.co.in/rishivamsha/bharadvaja",
+        triggers: ["bharadwaja", "garga", "gargyasa", "kapi", "kapila", "kanva", "angirasa", "bhaarhaspatya"]
+      },
+      { 
+        name: "Kashyapa", 
+        url: "https://vamsha.co.in/rishivamsha/kashyapa",
+        triggers: ["kashyapa", "kasyapa", "sandilya", "naitruva", "naitruvakaasyapa", "asitha", "daivala"]
+      },
+      { 
+        name: "Atri", 
+        url: "https://vamsha.co.in/rishivamsha/atri",
+        triggers: ["atreya", "atri", "krishnatreya", "gavisthira", "vadhbhutaka", "archanaasa", "syaavaasva"]
+      },
+      { 
+        name: "Gautama", 
+        url: "https://vamsha.co.in/rishivamsha/gautama",
+        triggers: ["gautama", "gautamasa", "ayasya", "aayasyasa", "sharadvan"]
+      },
+      { 
+        name: "Jamadagni", 
+        url: "https://vamsha.co.in/rishivamsha/jamadagni",
+        triggers: ["jamadagni", "bhrigu", "bhargava", "vatsa", "srivatsa", "bidasa", "maitreya", "chyavana", "apnuvat", "aurava"]
+      }
+    ];
+
+    // Try to find by Gothra name first, then by primary Rishis
+    return mapping.find(m => 
+      m.triggers.some(t => gothra.includes(t)) || 
+      m.triggers.some(t => rishis.some(r => r.includes(t)))
+    ) || { name: "Saptarishi", url: "https://vamsha.co.in" };
+  };
+
+  const saptarishi = getSaptarishiInfo();
+
   return (
     <div className="app-container">
       <div className="hero-section">
@@ -729,6 +786,40 @@ const App: React.FC = () => {
               <h4>Meaning & Significance</h4>
               <p className="meaning-text">{generateTranslation()}</p>
             </div>
+
+            {saptarishi && (
+              <div className="vamsha-bridge animate-fade-in">
+                <div className="vb-content">
+                  <div className="vb-visual">
+                    <div className="vb-node saptarishi-node">
+                      <FaOm />
+                      <span>{saptarishi.name}</span>
+                    </div>
+                    <div className="vb-connector"></div>
+                    <div className="vb-node gothra-node">
+                      <FaUserCheck />
+                      <span>{selectedGothraName}</span>
+                    </div>
+                  </div>
+                  <div className="vb-text">
+                    <h3>Discover Your Sacred Roots</h3>
+                    <p>
+                      The names you just recited are more than history—they are your living legacy. 
+                      Your <strong>{selectedGothraName}</strong> lineage is a vital branch of the <strong>{saptarishi.name}</strong> family tree. 
+                      Explore the complete genealogy and see how your ancestors shaped the Vedic tradition.
+                    </p>
+                    <a 
+                      href={saptarishi.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="vb-link-btn"
+                    >
+                      Explore the {saptarishi.name} Vamsha Tree →
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
