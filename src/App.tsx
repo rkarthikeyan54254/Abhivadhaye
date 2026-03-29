@@ -358,11 +358,6 @@ const App: React.FC = () => {
     localStorage.setItem('abhivadhaye_session', JSON.stringify(sessionData));
   };
 
-  const clearSession = () => {
-    localStorage.removeItem('abhivadhaye_session');
-    window.location.reload();
-  };
-
   useEffect(() => {
     // Calculate visits based on time since a reference date (Jan 1, 2026)
     // to simulate a live, growing counter without a flaky backend API.
@@ -861,7 +856,6 @@ const App: React.FC = () => {
               <div className="action-row">
                 <button onClick={() => { navigator.clipboard.writeText(getGeneratedText(activeLang)); alert('Copied!'); }} className="action-btn"><FaCopy /> Copy</button>
                 <button onClick={handleDownloadImage} className="action-btn download-btn"><FaDownload /> Image</button>
-                <button onClick={clearSession} className="action-btn clear-btn">Reset</button>
                 <button onClick={() => {
                   const shareMsg = `My Abhivadhaye:\n\n${getGeneratedText(activeLang)}\n\nGenerate yours at: https://abhivadhaye.in`;
                   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareMsg)}`, '_blank');

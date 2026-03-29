@@ -565,18 +565,6 @@ body {
   border: none;
 }
 
-.clear-btn {
-  background: rgba(255, 0, 0, 0.1);
-  border: 1px solid rgba(255, 0, 0, 0.2);
-  color: #ff4444;
-}
-
-.clear-btn:hover {
-  background: rgba(255, 0, 0, 0.2);
-  color: #fff;
-  border-color: #ff4444;
-}
-
 .meaning-card {
   margin-top: 40px;
 }
