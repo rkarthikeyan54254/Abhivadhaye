@@ -6,6 +6,7 @@ import {
   FaFeather, 
   FaCopy, 
   FaWhatsapp, 
+  FaInstagram,
   FaInfoCircle, 
   FaLanguage, 
   FaHistory, 
@@ -971,12 +972,33 @@ const App: React.FC = () => {
               <div className="action-row">
                 <button onClick={() => { navigator.clipboard.writeText(getGeneratedText(activeLang)); alert('Copied!'); }} className="action-btn"><FaCopy /> Copy Text</button>
                 <button onClick={handleDownloadImage} className="action-btn download-btn"><FaDownload /> Save Image</button>
-                <button onClick={handleShareImage} className="action-btn wa-btn"><FaWhatsapp /> Share Card</button>
+                <button onClick={handleShareImage} className="action-btn wa-btn"><FaWhatsapp /> WhatsApp</button>
+                <button onClick={handleShareImage} className="action-btn insta-btn"><FaInstagram /> Instagram</button>
               </div>
             </div>
             <div className="meaning-card">
               <h4>Meaning & Significance</h4>
-              <p className="meaning-text">{generateTranslation()}</p>
+              <div className="meaning-grid">
+                {generateTranslation().split('\n').map((line, index) => {
+                  const parts = line.split(' - ');
+                  if (parts.length === 2) {
+                    const [phrasePart, descriptionPart] = parts;
+                    const phraseParts = phrasePart.split('. ');
+                    if (phraseParts.length === 2) {
+                      const phraseIndex = phraseParts[0];
+                      const phrase = phraseParts[1];
+                      return (
+                        <div key={index} className="meaning-item">
+                          <div className="mi-index">{phraseIndex}.</div>
+                          <div className="mi-phrase">{phrase}</div>
+                          <div className="mi-desc">{descriptionPart}</div>
+                        </div>
+                      );
+                    }
+                  }
+                  return null; // Skip lines that don't match the expected format
+                })}
+              </div>
             </div>
 
             {saptarishi && (
