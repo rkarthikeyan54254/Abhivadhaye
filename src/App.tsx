@@ -11,9 +11,11 @@ import {
   FaHistory, 
   FaOm, 
   FaUserCheck, 
-  FaLightbulb 
+  FaLightbulb,
+  FaDownload
 } from 'react-icons/fa';
 import Select from 'react-select';
+import { toPng } from 'html-to-image';
 
 type Language = 'English' | 'Hindi' | 'Tamil' | 'Telugu';
 
@@ -320,6 +322,47 @@ const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [guidedNotice, setGuidedNotice] = useState('');
 
+  // --- Persistence Logic ---
+  useEffect(() => {
+    const saved = localStorage.getItem('abhivadhaye_session');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.gothra) setSelectedGothraName(data.gothra);
+        if (data.variation !== undefined) setSelectedVariationIndex(data.variation);
+        if (data.veda) setSelectedVeda(data.veda);
+        if (data.suthra) setSelectedSuthra(data.suthra);
+        if (data.name) setName(data.name);
+        if (data.nativeName) setNativeName(data.nativeName);
+        if (data.lang) setActiveLang(data.lang);
+        // If everything is there, we can even auto-generate
+        if (data.gothra && data.name && data.veda && data.suthra) {
+          setIsGenerated(true);
+        }
+      } catch (e) {
+        console.error("Failed to load saved session", e);
+      }
+    }
+  }, []);
+
+  const saveSession = () => {
+    const sessionData = {
+      gothra: selectedGothraName,
+      variation: selectedVariationIndex,
+      veda: selectedVeda,
+      suthra: selectedSuthra,
+      name,
+      nativeName,
+      lang: activeLang
+    };
+    localStorage.setItem('abhivadhaye_session', JSON.stringify(sessionData));
+  };
+
+  const clearSession = () => {
+    localStorage.removeItem('abhivadhaye_session');
+    window.location.reload();
+  };
+
   useEffect(() => {
     // Calculate visits based on time since a reference date (Jan 1, 2026)
     // to simulate a live, growing counter without a flaky backend API.
@@ -426,10 +469,40 @@ const App: React.FC = () => {
   const handleGenerate = () => {
     if (selectedGothraData && name && selectedVeda && selectedSuthra) {
       setIsGenerated(true);
+      saveSession();
       setTimeout(() => document.getElementById('result-section')?.scrollIntoView({ behavior: 'smooth' }), 100);
     } else {
       alert("Please fill in all fields to generate your Abhivadhaye.");
     }
+  };
+
+  const handleDownloadImage = () => {
+    const node = document.getElementById('share-card-container');
+    if (!node) return;
+
+    node.style.display = 'block';
+    
+    toPng(node, { 
+      cacheBust: true,
+      backgroundColor: '#0f0f0f',
+      width: 1080,
+      height: 1920,
+      style: {
+        display: 'flex',
+      }
+    })
+      .then((dataUrl) => {
+        const link = document.createElement('a');
+        link.download = `Abhivadhaye-${name.replace(/\s+/g, '-')}.png`;
+        link.href = dataUrl;
+        link.click();
+        node.style.display = 'none';
+      })
+      .catch((err) => {
+        console.error('Capture failed', err);
+        alert('Failed to generate image. Please try again.');
+        node.style.display = 'none';
+      });
   };
 
   const handleSubmitFeedback = (e: React.FormEvent<HTMLFormElement>) => {
@@ -544,7 +617,18 @@ const App: React.FC = () => {
     ) || { name: "Saptarishi", url: "https://vamsha.co.in" };
   };
 
+  const RISHI_LORE: Record<string, string> = {
+    "Vasishtha": "Sage Vasishtha is the mind-born son of Brahma and the possessor of Nandini, the divine cow of plenty. He is revered as the author of the 7th Mandala of the Rig Veda.",
+    "Vishwamitra": "Born a powerful King (Kaushika), Vishwamitra attained the title of Brahmarishi through intense penance. He is the seer of the sacred Gayatri Mantra.",
+    "Bharadvaja": "A master of both spiritual and worldly sciences, Sage Bharadvaja is credited with the 'Yantra Sarvasva', an ancient text on aeronautics and mechanical sciences.",
+    "Kashyapa": "Known as the father of all living beings, Sage Kashyapa's lineage includes Devas, Asuras, and all creatures, symbolizing the unity of all life.",
+    "Atri": "Sage Atri is one of the Saptarishis whose power of penance was so great that he and his wife Anasuya were chosen as parents by the Trimurti (Dattatreya).",
+    "Gautama": "Sage Gautama is the author of the Nyaya Sutras, the foundation of logic in Indian philosophy. He is also the one who brought the river Godavari to earth.",
+    "Jamadagni": "Known for his mastery over weapons and scriptures, Sage Jamadagni is the father of Parashurama. His lineage represents the perfect union of wisdom and valor."
+  };
+
   const saptarishi = getSaptarishiInfo();
+  const rishiLore = saptarishi ? RISHI_LORE[saptarishi.name] : null;
 
   return (
     <div className="app-container">
@@ -776,6 +860,8 @@ const App: React.FC = () => {
               </p>
               <div className="action-row">
                 <button onClick={() => { navigator.clipboard.writeText(getGeneratedText(activeLang)); alert('Copied!'); }} className="action-btn"><FaCopy /> Copy</button>
+                <button onClick={handleDownloadImage} className="action-btn download-btn"><FaDownload /> Image</button>
+                <button onClick={clearSession} className="action-btn clear-btn">Reset</button>
                 <button onClick={() => {
                   const shareMsg = `My Abhivadhaye:\n\n${getGeneratedText(activeLang)}\n\nGenerate yours at: https://abhivadhaye.in`;
                   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareMsg)}`, '_blank');
@@ -806,8 +892,13 @@ const App: React.FC = () => {
                     <p>
                       The names you just recited are more than history—they are your living legacy. 
                       Your <strong>{selectedGothraName}</strong> lineage is a vital branch of the <strong>{saptarishi.name}</strong> family tree. 
-                      Explore the complete genealogy and see how your ancestors shaped the Vedic tradition.
                     </p>
+                    {rishiLore && (
+                      <div className="rishi-lore-snippet">
+                        <FaLightbulb />
+                        <span><strong>Sage {saptarishi.name}:</strong> {rishiLore}</span>
+                      </div>
+                    )}
                     <a 
                       href={saptarishi.url} 
                       target="_blank" 
@@ -873,6 +964,40 @@ const App: React.FC = () => {
         <AdComponent adSlot="1234567890" />
       </div>
       <Footer />
+
+      {/* Hidden Share Card for Image Generation */}
+      <div id="share-card-container" style={{ display: 'none', position: 'absolute', left: '-9999px' }}>
+        <div className="share-card">
+          <div className="sc-border">
+            <div className="sc-header">
+              <div className="sc-logo-box">
+                <FaOm />
+              </div>
+              <div className="sc-title">ABHIVADHAYE</div>
+              <div className="sc-divider"></div>
+            </div>
+            
+            <div className="sc-content">
+              <div className="sc-mantra-box">
+                <p className={`sc-mantra ${activeLang !== 'English' ? 'native-font' : ''}`}>
+                  {getGeneratedText(activeLang)}
+                </p>
+              </div>
+              
+              <div className="sc-identity">
+                <div className="sc-label">Sacred Lineage of</div>
+                <div className="sc-name">Sri {name}</div>
+                <div className="sc-gothra-tag">{selectedGothraName} Gothra</div>
+              </div>
+            </div>
+
+            <div className="sc-footer">
+              <p>Explore your roots at <strong>abhivadhaye.in</strong></p>
+              <p className="sc-tagline">Honor Your Roots. Preserving Vedic Wisdom.</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
