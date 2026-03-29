@@ -729,7 +729,36 @@ body {
   box-shadow: 0 4px 15px rgba(255, 153, 51, 0.3);
 }
 
-/* --- Share Card (Hidden Template) --- */
+/* --- Live Direct Card Rendering --- */
+.live-card-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 40px;
+  width: 100%;
+}
+
+.live-card-preview {
+  /* Removed width: 100% and max-width to let JS control the exact dimensions */
+  background: #000;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255, 153, 51, 0.2);
+  position: relative;
+  margin: 0 auto; /* Center the container itself */
+}
+
+/* Scaled wrapper for the 1080px card */
+.live-card-scaler {
+  width: 1080px;
+  height: 1920px;
+  transform-origin: top left; /* Reverted to top left */
+  position: relative;
+}
+
+/* Base Share Card Styles (re-usable) */
 .share-card {
   width: 1080px;
   height: 1920px;
@@ -738,43 +767,44 @@ body {
   color: white;
   display: flex;
   flex-direction: column;
-  padding: 80px;
+  padding: 60px; /* Reduced from 80 */
   box-sizing: border-box;
   font-family: 'Poppins', sans-serif;
 }
 
 .sc-border {
   flex: 1;
-  border: 12px double var(--accent-color);
-  padding: 80px;
+  border: 10px double var(--accent-color); /* Slightly thinner */
+  padding: 60px; /* Reduced from 80 */
   display: flex;
   flex-direction: column;
+  justify-content: space-between; /* Pin header and footer */
   position: relative;
 }
 
 .sc-header {
   text-align: center;
-  margin-bottom: 100px;
+  margin-bottom: 40px; /* Much more compact */
 }
 
 .sc-logo-box {
-  font-size: 120px;
+  font-size: 100px; /* Smaller logo */
   color: var(--accent-color);
-  margin-bottom: 40px;
+  margin-bottom: 20px;
 }
 
 .sc-title {
-  font-size: 80px;
-  letter-spacing: 24px;
+  font-size: 60px; /* Smaller title */
+  letter-spacing: 18px;
   font-weight: 700;
   color: #fff;
 }
 
 .sc-divider {
-  width: 200px;
-  height: 4px;
+  width: 160px;
+  height: 3px;
   background: var(--accent-color);
-  margin: 40px auto;
+  margin: 20px auto;
 }
 
 .sc-content {
@@ -784,48 +814,48 @@ body {
   justify-content: center;
   align-items: center;
   text-align: center;
+  gap: 40px;
 }
 
 .sc-mantra-box {
   background: rgba(255, 153, 51, 0.05);
   border: 2px solid rgba(255, 153, 51, 0.2);
-  padding: 60px;
-  border-radius: 40px;
+  padding: 40px;
+  border-radius: 30px;
   width: 100%;
-  margin-bottom: 100px;
 }
 
 .sc-mantra {
-  font-size: 54px;
-  line-height: 1.6;
+  font-size: 42px; /* Reduced from 54px for better fit */
+  line-height: 1.5;
   color: #fff;
   margin: 0;
 }
 
 .sc-identity {
-  margin-top: 40px;
+  margin-top: 20px;
 }
 
 .sc-label {
-  font-size: 32px;
+  font-size: 28px;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 4px;
-  margin-bottom: 20px;
+  letter-spacing: 3px;
+  margin-bottom: 15px;
 }
 
 .sc-name {
-  font-size: 84px;
+  font-size: 72px; /* Smaller name */
   font-weight: 700;
   color: var(--accent-color);
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .sc-gothra-tag {
-  font-size: 42px;
+  font-size: 36px;
   background: #222;
   display: inline-block;
-  padding: 15px 40px;
+  padding: 12px 35px;
   border-radius: 100px;
   border: 1px solid #444;
 }
@@ -833,12 +863,13 @@ body {
 .sc-footer {
   text-align: center;
   border-top: 2px solid #333;
-  padding-top: 60px;
+  padding-top: 40px;
+  margin-top: 40px;
 }
 
 .sc-footer p {
-  margin: 10px 0;
-  font-size: 36px;
+  margin: 5px 0;
+  font-size: 32px;
   color: var(--text-muted);
 }
 

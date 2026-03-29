@@ -321,6 +321,45 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'expert' | 'guided'>('expert');
   const [searchQuery, setSearchQuery] = useState('');
   const [guidedNotice, setGuidedNotice] = useState('');
+  const [scale, setScale] = useState(1);
+  const cardContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // --- Scaling Logic for Direct Rendering ---
+  useEffect(() => {
+    const handleResize = () => {
+      if (cardContainerRef.current) {
+        const parent = cardContainerRef.current.parentElement;
+        if (!parent) return;
+        
+        // Available width capped at 400px for nice display
+        const availableWidth = Math.min(parent.offsetWidth, 400); 
+        const targetWidth = 1080;
+        const targetHeight = 1920;
+        
+        let newScale = availableWidth / targetWidth;
+        const maxHeight = window.innerHeight * 0.8;
+        
+        if (targetHeight * newScale > maxHeight) {
+          newScale = maxHeight / targetHeight;
+        }
+        
+        setScale(newScale);
+        
+        // Match container to scaled size
+        cardContainerRef.current.style.width = `${targetWidth * newScale}px`;
+        cardContainerRef.current.style.height = `${targetHeight * newScale}px`;
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    // Initial scale with a small delay to ensure DOM is ready
+    const timer = setTimeout(handleResize, 50);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timer);
+    };
+  }, [isGenerated]);
 
   // --- Persistence Logic ---
   useEffect(() => {
@@ -472,32 +511,76 @@ const App: React.FC = () => {
   };
 
   const handleDownloadImage = () => {
-    const node = document.getElementById('share-card-container');
+    const node = document.getElementById('live-share-card');
     if (!node) return;
 
-    node.style.display = 'block';
-    
-    toPng(node, { 
-      cacheBust: true,
-      backgroundColor: '#0f0f0f',
-      width: 1080,
-      height: 1920,
-      style: {
-        display: 'flex',
-      }
-    })
-      .then((dataUrl) => {
+    // Small delay to ensure any pending renders are complete
+    setTimeout(() => {
+      toPng(node, { 
+        cacheBust: true,
+        backgroundColor: '#0f0f0f',
+        width: 1080,
+        height: 1920,
+        pixelRatio: 1,
+        skipFonts: true, // Fix for SecurityError: Failed to read 'cssRules'
+      })
+        .then((dataUrl) => {
+          const link = document.createElement('a');
+          link.download = `Abhivadhaye-${name.replace(/\s+/g, '-')}.png`;
+          link.href = dataUrl;
+          link.click();
+        })
+        .catch((err) => {
+          console.error('Capture failed', err);
+          alert('Failed to generate image. Please try again.');
+        });
+    }, 100);
+  };
+
+  const handleShareImage = async () => {
+    const node = document.getElementById('live-share-card');
+    if (!node) return;
+
+    try {
+      await new Promise(r => setTimeout(r, 100));
+
+      const dataUrl = await toPng(node, { 
+        cacheBust: true,
+        backgroundColor: '#0f0f0f',
+        width: 1080,
+        height: 1920,
+        pixelRatio: 1,
+        skipFonts: true,
+      });
+
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], `Abhivadhaye-${name.replace(/\s+/g, '-')}.png`, { type: 'image/png' });
+
+      // Check if sharing is supported and if the specific file can be shared
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'My Abhivadhaye',
+            text: 'I just generated my ancestral lineage card!',
+          });
+        } catch (shareErr: any) {
+          // If the user cancelled (AbortError), don't show an error
+          if (shareErr.name === 'AbortError') return;
+          throw shareErr; // Rethrow other errors to the outer catch
+        }
+      } else {
+        // Fallback for Desktop or unsupported browsers
         const link = document.createElement('a');
         link.download = `Abhivadhaye-${name.replace(/\s+/g, '-')}.png`;
         link.href = dataUrl;
         link.click();
-        node.style.display = 'none';
-      })
-      .catch((err) => {
-        console.error('Capture failed', err);
-        alert('Failed to generate image. Please try again.');
-        node.style.display = 'none';
-      });
+      }
+    } catch (err) {
+      console.error('Share failed', err);
+      // Final fallback if everything fails
+      alert('Could not share directly. The image has been downloaded to your device instead.');
+    }
   };
 
   const handleSubmitFeedback = (e: React.FormEvent<HTMLFormElement>) => {
@@ -849,17 +932,46 @@ const App: React.FC = () => {
               ))}
             </div>
             
-            <div className="mantra-display">
-              <p className={`mantra-text ${activeLang !== 'English' ? 'native-font' : ''}`}>
-                {getGeneratedText(activeLang)}
-              </p>
+            <div className="live-card-container">
+              <div className="live-card-preview" ref={cardContainerRef}>
+                <div className="live-card-scaler" style={{ transform: `scale(${scale})` }}>
+                  <div className="share-card" id="live-share-card">
+                    <div className="sc-border">
+                      <div className="sc-header">
+                        <div className="sc-logo-box">
+                          <FaOm />
+                        </div>
+                        <div className="sc-title">ABHIVADHAYE</div>
+                        <div className="sc-divider"></div>
+                      </div>
+                      
+                      <div className="sc-content">
+                        <div className="sc-mantra-box">
+                          <p className={`sc-mantra ${activeLang !== 'English' ? 'native-font' : ''}`}>
+                            {getGeneratedText(activeLang)}
+                          </p>
+                        </div>
+                        
+                        <div className="sc-identity">
+                          <div className="sc-label">Sacred Lineage of</div>
+                          <div className="sc-name">Sri {name}</div>
+                          <div className="sc-gothra-tag">{selectedGothraName} Gothra</div>
+                        </div>
+                      </div>
+
+                      <div className="sc-footer">
+                        <p>Explore your roots at <strong>abhivadhaye.in</strong></p>
+                        <p className="sc-tagline">Honor Your Roots. Preserving Vedic Wisdom.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="action-row">
-                <button onClick={() => { navigator.clipboard.writeText(getGeneratedText(activeLang)); alert('Copied!'); }} className="action-btn"><FaCopy /> Copy</button>
-                <button onClick={handleDownloadImage} className="action-btn download-btn"><FaDownload /> Image</button>
-                <button onClick={() => {
-                  const shareMsg = `My Abhivadhaye:\n\n${getGeneratedText(activeLang)}\n\nGenerate yours at: https://abhivadhaye.in`;
-                  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareMsg)}`, '_blank');
-                }} className="action-btn wa-btn"><FaWhatsapp /> WhatsApp</button>
+                <button onClick={() => { navigator.clipboard.writeText(getGeneratedText(activeLang)); alert('Copied!'); }} className="action-btn"><FaCopy /> Copy Text</button>
+                <button onClick={handleDownloadImage} className="action-btn download-btn"><FaDownload /> Save Image</button>
+                <button onClick={handleShareImage} className="action-btn wa-btn"><FaWhatsapp /> Share Card</button>
               </div>
             </div>
             <div className="meaning-card">
@@ -958,40 +1070,6 @@ const App: React.FC = () => {
         <AdComponent adSlot="1234567890" />
       </div>
       <Footer />
-
-      {/* Hidden Share Card for Image Generation */}
-      <div id="share-card-container" style={{ display: 'none', position: 'absolute', left: '-9999px' }}>
-        <div className="share-card">
-          <div className="sc-border">
-            <div className="sc-header">
-              <div className="sc-logo-box">
-                <FaOm />
-              </div>
-              <div className="sc-title">ABHIVADHAYE</div>
-              <div className="sc-divider"></div>
-            </div>
-            
-            <div className="sc-content">
-              <div className="sc-mantra-box">
-                <p className={`sc-mantra ${activeLang !== 'English' ? 'native-font' : ''}`}>
-                  {getGeneratedText(activeLang)}
-                </p>
-              </div>
-              
-              <div className="sc-identity">
-                <div className="sc-label">Sacred Lineage of</div>
-                <div className="sc-name">Sri {name}</div>
-                <div className="sc-gothra-tag">{selectedGothraName} Gothra</div>
-              </div>
-            </div>
-
-            <div className="sc-footer">
-              <p>Explore your roots at <strong>abhivadhaye.in</strong></p>
-              <p className="sc-tagline">Honor Your Roots. Preserving Vedic Wisdom.</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
