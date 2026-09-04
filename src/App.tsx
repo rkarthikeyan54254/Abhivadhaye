@@ -328,6 +328,7 @@ const App: React.FC = () => {
   // --- Vāgdhenu AI chant state ---
   const [chantState, setChantState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [chantUrl, setChantUrl] = useState('');
+  const [chantError, setChantError] = useState('');
   const chantReqId = useRef(0);
 
   // --- Scaling Logic for Direct Rendering (share card) ---
@@ -449,6 +450,7 @@ const App: React.FC = () => {
     chantReqId.current += 1; // invalidate any in-flight request
     setChantState('idle');
     setChantUrl('');
+    setChantError('');
   };
 
   const resetOnEdit = () => {
@@ -676,6 +678,7 @@ const App: React.FC = () => {
       const decoder = new TextDecoder();
       let buffer = '';
       let audioUrl = '';
+      let statusMsg = '';
       const started = Date.now();
       // eslint-disable-next-line no-constant-condition
       while (true) {
@@ -693,21 +696,29 @@ const App: React.FC = () => {
               const arr = JSON.parse(dataRaw);
               const a = arr && arr[0];
               audioUrl = (a && a.url) ? a.url : (a && a.path ? `${VAG_BASE}/gradio_api/file=${a.path}` : '');
+              if (!audioUrl && arr && typeof arr[1] === 'string') statusMsg = arr[1];
             } catch { /* ignore */ }
           } else if (ev === 'error') {
-            throw new Error('space_error');
+            if (dataRaw) { try { statusMsg = JSON.parse(dataRaw); } catch { statusMsg = dataRaw; } }
+            throw new Error(statusMsg || 'space_error');
           }
         }
         if (audioUrl) break;
-        if (Date.now() - started > 180000) throw new Error('timeout');
+        if (Date.now() - started > 200000) throw new Error('timeout');
       }
       if (myId !== chantReqId.current) return; // superseded by a newer request
-      if (!audioUrl) throw new Error('no_audio');
+      if (!audioUrl) throw new Error(statusMsg || 'no_audio');
       setChantUrl(audioUrl);
       setChantState('ready');
-    } catch (e) {
+    } catch (e: any) {
       if (myId !== chantReqId.current) return;
-      console.error('Vāgdhenu chant failed:', e);
+      const raw = String((e && e.message) || '');
+      console.error('Vāgdhenu chant failed:', raw);
+      let friendly = 'The chant model is busy or unreachable right now.';
+      if (/quota/i.test(raw)) friendly = 'Vāgdhenu’s free daily chant quota is used up for now. Please try again later, or open the demo directly to chant it there.';
+      else if (/failed to fetch|networkerror|load failed/i.test(raw)) friendly = 'Couldn’t reach the chant model — your network or browser may have blocked it. You can open the Vāgdhenu demo instead.';
+      else if (/timeout/i.test(raw)) friendly = 'The chant is taking too long right now. Please try again in a little while.';
+      setChantError(friendly);
       setChantState('error');
     }
   };
@@ -716,15 +727,6 @@ const App: React.FC = () => {
     try { navigator.clipboard?.writeText(getGeneratedText('Hindi')); } catch { /* ignore */ }
     window.open(VAG_BASE, '_blank', 'noopener,noreferrer');
   };
-
-  // Start preparing the chant automatically the moment a result is shown,
-  // so the model is already warming up (or done) before the user asks for it.
-  useEffect(() => {
-    if (isGenerated && selectedGothraData) {
-      runChant();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isGenerated]);
 
   const langClass = LANG_META[activeLang].cls;
   const isNative = activeLang !== 'English';
@@ -1003,6 +1005,13 @@ const App: React.FC = () => {
                   <div className="recite-lang-note">Sanskrit · Vāgdhenu AI <span className="beta-tag">BETA</span></div>
                 </div>
 
+                {chantState === 'idle' && (
+                  <div className="chant-idle">
+                    <button className="chant-btn chant-go" onClick={runChant}><FaMusic /> Chant this</button>
+                    <span className="chant-idle-hint">First chant can take 10–60s while the model warms up.</span>
+                  </div>
+                )}
+
                 {chantState === 'loading' && (
                   <div className="chant-loading"><FaSpinner className="spin" /> Composing your chant… the first one can take 10–60 seconds while the model warms up. Please keep this tab open.</div>
                 )}
@@ -1017,7 +1026,7 @@ const App: React.FC = () => {
 
                 {chantState === 'error' && (
                   <div className="chant-error">
-                    <p>The chant model is busy or unreachable right now.</p>
+                    <p>{chantError || 'The chant model is busy or unreachable right now.'}</p>
                     <div className="chant-row">
                       <button className="chant-btn" onClick={runChant}><FaMusic /> Try again</button>
                       <button className="chant-btn" onClick={openVagdhenu}><FaExternalLinkAlt /> Open Vāgdhenu</button>
@@ -1025,14 +1034,8 @@ const App: React.FC = () => {
                   </div>
                 )}
 
-                {chantState === 'idle' && (
-                  <div className="chant-row">
-                    <button className="chant-btn chant-go" onClick={runChant}><FaMusic /> Generate chant</button>
-                  </div>
-                )}
-
                 <p className="chant-note">
-                  <FaMagic /> Chanted with <a href="https://prathosh.in/vagdhenu/" target="_blank" rel="noopener noreferrer">Vāgdhenu</a>, a Sanskrit chant model by Dr. Prathosh A.P. It is experimental and tuned for metered verse, so a spoken lineage declaration may vary. The chant renders the Sanskrit (Devanagari) form.
+                  <FaMagic /> Chanted with <a href="https://prathosh.in/vagdhenu/" target="_blank" rel="noopener noreferrer">Vāgdhenu</a>, a free experimental Sanskrit chant model by Dr. Prathosh A.P. It runs on shared GPU with a small daily limit and is tuned for metered verse, so it may be busy or vary for a spoken lineage declaration. The chant renders the Sanskrit (Devanagari) form.
                 </p>
               </div>
 
