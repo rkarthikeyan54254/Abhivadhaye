@@ -1,19 +1,12 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { abhivadhayeData, AbhivadhayeRecord } from './data';
 import Footer from './components/Footer';
 import AdComponent from './components/AdComponent';
-import { 
-  FaFeather, 
-  FaCopy, 
-  FaWhatsapp, 
-  FaInstagram,
-  FaInfoCircle, 
-  FaLanguage, 
-  FaHistory, 
-  FaOm, 
-  FaUserCheck, 
-  FaLightbulb,
-  FaDownload
+import {
+  FaFeather, FaCopy, FaWhatsapp, FaInstagram, FaInfoCircle, FaLanguage,
+  FaHistory, FaOm, FaUserCheck, FaLightbulb, FaDownload, FaPlay, FaPause,
+  FaUndo, FaMusic, FaMagic, FaExternalLinkAlt, FaPrayingHands, FaScroll,
+  FaHandsHelping, FaSpinner
 } from 'react-icons/fa';
 import Select from 'react-select';
 import { toPng } from 'html-to-image';
@@ -306,6 +299,15 @@ const transliteratePhonetic = (name: string, lang: Language): string => {
   return knownNames[lower]?.[lang] || name; 
 };
 
+const LANG_META: Record<Language, { code: string; label: string; cls: string }> = {
+  English: { code: 'en-IN', label: 'English', cls: '' },
+  Hindi:   { code: 'hi-IN', label: 'हिन्दी', cls: 'lang-hi' },
+  Tamil:   { code: 'ta-IN', label: 'தமிழ்', cls: 'lang-ta' },
+  Telugu:  { code: 'te-IN', label: 'తెలుగు', cls: 'lang-te' },
+};
+
+const VAG_BASE = 'https://prathoshap-vagdhenu-demo.hf.space';
+
 const App: React.FC = () => {
   const [selectedGothraName, setSelectedGothraName] = useState('');
   const [selectedVariationIndex, setSelectedVariationIndex] = useState(0);
@@ -316,7 +318,6 @@ const App: React.FC = () => {
   const [activeLang, setActiveLang] = useState<Language>('English');
   const [isGenerated, setIsGenerated] = useState(false);
   const [feedback, setFeedback] = useState('');
-  const [pageVisits, setPageVisits] = useState(0);
   const [factIndex, setFactIndex] = useState(0);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'expert' | 'guided'>('expert');
@@ -325,37 +326,39 @@ const App: React.FC = () => {
   const [scale, setScale] = useState(1);
   const cardContainerRef = React.useRef<HTMLDivElement>(null);
 
-  // --- Scaling Logic for Direct Rendering ---
+  // --- Recite (SpeechSynthesis) state ---
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [activeWordIndex, setActiveWordIndex] = useState(-1);
+  const [rate, setRate] = useState(0.8);
+  const speechFlag = useRef({ cancelled: false });
+  const ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+  // --- Vāgdhenu AI chant state ---
+  const [chantState, setChantState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [chantUrl, setChantUrl] = useState('');
+
+  // --- Scaling Logic for Direct Rendering (share card) ---
   useEffect(() => {
     const handleResize = () => {
       if (cardContainerRef.current) {
         const parent = cardContainerRef.current.parentElement;
         if (!parent) return;
-        
-        // Available width capped at 400px for nice display
-        const availableWidth = Math.min(parent.offsetWidth, 400); 
+        const availableWidth = Math.min(parent.offsetWidth, 400);
         const targetWidth = 1080;
         const targetHeight = 1920;
-        
         let newScale = availableWidth / targetWidth;
         const maxHeight = window.innerHeight * 0.8;
-        
         if (targetHeight * newScale > maxHeight) {
           newScale = maxHeight / targetHeight;
         }
-        
         setScale(newScale);
-        
-        // Match container to scaled size
         cardContainerRef.current.style.width = `${targetWidth * newScale}px`;
         cardContainerRef.current.style.height = `${targetHeight * newScale}px`;
       }
     };
-
     window.addEventListener('resize', handleResize);
-    // Initial scale with a small delay to ensure DOM is ready
     const timer = setTimeout(handleResize, 50);
-    
     return () => {
       window.removeEventListener('resize', handleResize);
       clearTimeout(timer);
@@ -375,12 +378,11 @@ const App: React.FC = () => {
         if (data.name) setName(data.name);
         if (data.nativeName) setNativeName(data.nativeName);
         if (data.lang) setActiveLang(data.lang);
-        // If everything is there, we can even auto-generate
         if (data.gothra && data.name && data.veda && data.suthra) {
           setIsGenerated(true);
         }
       } catch (e) {
-        console.error("Failed to load saved session", e);
+        console.error('Failed to load saved session', e);
       }
     }
   }, []);
@@ -393,34 +395,30 @@ const App: React.FC = () => {
       suthra: selectedSuthra,
       name,
       nativeName,
-      lang: activeLang
+      lang: activeLang,
     };
     localStorage.setItem('abhivadhaye_session', JSON.stringify(sessionData));
   };
 
-  useEffect(() => {
-    // Calculate visits based on time since a reference date (Jan 1, 2026)
-    // to simulate a live, growing counter without a flaky backend API.
-    const referenceDate = new Date('2026-01-01T00:00:00Z').getTime();
-    const now = new Date().getTime();
-    const msElapsed = now - referenceDate;
-    
-    // Base: 1250, plus roughly 120 hits per day (5 per hour)
-    const baseVisits = 1250;
-    const hitsPerMs = 120 / (24 * 60 * 60 * 1000); 
-    const calculatedVisits = Math.floor(baseVisits + (msElapsed * hitsPerMs));
-    
-    // Add a small random element based on current minute to make it feel "unique" per load
-    const jitter = (new Date().getMinutes() * 7) % 43;
-    setPageVisits(calculatedVisits + jitter);
-  }, []);
-
+  // Rotate the "Wisdom of the Sages" facts
   useEffect(() => {
     const factInterval = setInterval(() => {
       setFactIndex((prev) => (prev + 1) % VEDIC_FACTS.length);
     }, 8000);
     return () => clearInterval(factInterval);
   }, []);
+
+  // Prime speech voices + cleanup on unmount
+  useEffect(() => {
+    if (!ttsSupported) return;
+    window.speechSynthesis.getVoices();
+    const onVoices = () => window.speechSynthesis.getVoices();
+    window.speechSynthesis.addEventListener?.('voiceschanged', onVoices);
+    return () => {
+      window.speechSynthesis.removeEventListener?.('voiceschanged', onVoices);
+      window.speechSynthesis.cancel();
+    };
+  }, [ttsSupported]);
 
   useEffect(() => {
     if (activeLang !== 'English' && !nativeName) {
@@ -439,9 +437,9 @@ const App: React.FC = () => {
   }, [selectedGothraName]);
 
   const selectedGothraData = useMemo(() => availableVariations[selectedVariationIndex], [availableVariations, selectedVariationIndex]);
-  
+
   const uniqueVedas = useMemo(() => [
-    ...new Set(abhivadhayeData.map((item: AbhivadhayeRecord) => item.Veda).filter(Boolean))
+    ...new Set(abhivadhayeData.map((item: AbhivadhayeRecord) => item.Veda).filter(Boolean)),
   ].sort(), []);
 
   const filteredSuthras = useMemo(() => {
@@ -452,14 +450,14 @@ const App: React.FC = () => {
           .filter((item: AbhivadhayeRecord) => item.Veda === selectedVeda)
           .map((item: AbhivadhayeRecord) => item.Suthra)
           .filter(Boolean)
-      )
+      ),
     ].sort();
   }, [selectedVeda]);
 
   const filteredLineages = useMemo(() => {
     if (!searchQuery || searchQuery.length < 2) return [];
     const q = searchQuery.toLowerCase();
-    return abhivadhayeData.filter(item => 
+    return abhivadhayeData.filter(item =>
       item.Gothra.toLowerCase().includes(q) ||
       item.Rishi1.toLowerCase().includes(q) ||
       item.Rishi2.toLowerCase().includes(q) ||
@@ -467,63 +465,74 @@ const App: React.FC = () => {
     ).slice(0, 10);
   }, [searchQuery]);
 
+  const stopSpeech = () => {
+    speechFlag.current.cancelled = true;
+    if (ttsSupported) window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+    setIsPaused(false);
+    setActiveWordIndex(-1);
+  };
+
+  const resetOnEdit = () => {
+    setIsGenerated(false);
+    stopSpeech();
+    setChantState('idle');
+    setChantUrl('');
+  };
+
   const handleSelectLineage = (item: AbhivadhayeRecord) => {
     const cleanGothra = item.Gothra.replace(/\s\d+$/, '');
     setSelectedGothraName(cleanGothra);
-    
-    // Find the variation index
     const variations = abhivadhayeData.filter(v => v.Gothra.startsWith(cleanGothra));
     const idx = variations.findIndex(v => v.Rishi1 === item.Rishi1 && v.Rishi2 === item.Rishi2 && v.Rishi3 === item.Rishi3);
-    
     setSelectedVariationIndex(idx >= 0 ? idx : 0);
-    
     let veda = item.Veda;
     let suthra = item.Suthra;
     let usedDefault = false;
-
     if (!veda && SUGGESTED_DEFAULTS[cleanGothra]) {
       veda = SUGGESTED_DEFAULTS[cleanGothra].veda;
       suthra = SUGGESTED_DEFAULTS[cleanGothra].suthra;
       usedDefault = true;
     }
-
     setSelectedVeda(veda);
     setSelectedSuthra(suthra);
     setSearchQuery('');
-    setGuidedNotice(usedDefault 
-      ? `We've pre-filled the most common Veda/Suthra for ${cleanGothra}. Please verify.` 
-      : `Selection complete for ${cleanGothra}.`
+    setGuidedNotice(usedDefault
+      ? `We've pre-filled the most common Veda / Suthra for ${cleanGothra}. Please verify with your family elders.`
+      : `Lineage selected for ${cleanGothra}. Now add your name below.`
     );
-    setActiveTab('expert'); 
-    
+    setActiveTab('expert');
     setTimeout(() => {
-      document.querySelector('.glow-button')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.querySelector('.generate-btn')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
   };
 
   const handleGenerate = () => {
     if (selectedGothraData && name && selectedVeda && selectedSuthra) {
       setIsGenerated(true);
+      stopSpeech();
+      setChantState('idle');
+      setChantUrl('');
       saveSession();
       setTimeout(() => document.getElementById('result-section')?.scrollIntoView({ behavior: 'smooth' }), 100);
     } else {
-      alert("Please fill in all fields to generate your Abhivadhaye.");
+      alert('Please choose your Gothra, Veda, Suthra and enter your name to reveal your Abhivadhaye.');
     }
   };
+
+  const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 
   const handleDownloadImage = () => {
     const node = document.getElementById('live-share-card');
     if (!node) return;
-
-    // Small delay to ensure any pending renders are complete
     setTimeout(() => {
-      toPng(node, { 
+      toPng(node, {
         cacheBust: true,
-        backgroundColor: '#0f0f0f',
+        backgroundColor: '#2a0f0f',
         width: 1080,
         height: 1920,
         pixelRatio: 1,
-        skipFonts: true, // Fix for SecurityError: Failed to read 'cssRules'
+        skipFonts: true,
       })
         .then((dataUrl) => {
           const link = document.createElement('a');
@@ -533,7 +542,7 @@ const App: React.FC = () => {
         })
         .catch((err) => {
           console.error('Capture failed', err);
-          alert('Failed to generate image. Please try again.');
+          alert('Could not generate the image. Please try again.');
         });
     }, 100);
   };
@@ -541,37 +550,30 @@ const App: React.FC = () => {
   const handleShareImage = async () => {
     const node = document.getElementById('live-share-card');
     if (!node) return;
-
     try {
       await new Promise(r => setTimeout(r, 100));
-
-      const dataUrl = await toPng(node, { 
+      const dataUrl = await toPng(node, {
         cacheBust: true,
-        backgroundColor: '#0f0f0f',
+        backgroundColor: '#2a0f0f',
         width: 1080,
         height: 1920,
         pixelRatio: 1,
         skipFonts: true,
       });
-
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], `Abhivadhaye-${name.replace(/\s+/g, '-')}.png`, { type: 'image/png' });
-
-      // Check if sharing is supported and if the specific file can be shared
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
             files: [file],
             title: 'My Abhivadhaye',
-            text: 'I just generated my ancestral lineage card!',
+            text: 'My ancestral lineage salutation — generated at abhivadhaye.in',
           });
         } catch (shareErr: any) {
-          // If the user cancelled (AbortError), don't show an error
           if (shareErr.name === 'AbortError') return;
-          throw shareErr; // Rethrow other errors to the outer catch
+          throw shareErr;
         }
       } else {
-        // Fallback for Desktop or unsupported browsers
         const link = document.createElement('a');
         link.download = `Abhivadhaye-${name.replace(/\s+/g, '-')}.png`;
         link.href = dataUrl;
@@ -579,7 +581,6 @@ const App: React.FC = () => {
       }
     } catch (err) {
       console.error('Share failed', err);
-      // Final fallback if everything fails
       alert('Could not share directly. The image has been downloaded to your device instead.');
     }
   };
@@ -587,16 +588,14 @@ const App: React.FC = () => {
   const handleSubmitFeedback = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!feedback) return;
-    
     const formData = new FormData(e.currentTarget);
-
-    fetch("/", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams(formData as any).toString(),
     })
       .then(() => {
-        alert('Thank you for your feedback!');
+        alert('Thank you — your feedback helps us keep the lineages accurate.');
         setFeedback('');
       })
       .catch(() => {
@@ -614,483 +613,699 @@ const App: React.FC = () => {
   };
 
   const getGeneratedText = (lang: Language) => {
-    if (!selectedGothraData) return "";
+    if (!selectedGothraData) return '';
     const script = SCRIPTS[lang];
     const rishis = [
-      selectedGothraData.Rishi1, 
-      selectedGothraData.Rishi2, 
-      selectedGothraData.Rishi3, 
-      selectedGothraData.Rishi4, 
-      selectedGothraData.Rishi5, 
-      selectedGothraData.Rishi6, 
-      selectedGothraData.Rishi7
+      selectedGothraData.Rishi1,
+      selectedGothraData.Rishi2,
+      selectedGothraData.Rishi3,
+      selectedGothraData.Rishi4,
+      selectedGothraData.Rishi5,
+      selectedGothraData.Rishi6,
+      selectedGothraData.Rishi7,
     ].filter(Boolean) as string[];
     const count = rishis.length;
     const pravaraText = script[PRAVARA_EN_MAP[count] || `${count} Arseya`] || `${count} Arseya`;
     const nativeGothra = translate(selectedGothraName, lang);
     const nativeVeda = translate(selectedVeda, lang);
     const nativeSuthra = translate(selectedSuthra, lang);
-    const nativeRishis = rishis.map(r => translate(r, lang)).join(", ");
+    const nativeRishis = rishis.map(r => translate(r, lang)).join(', ');
     const displayName = lang === 'English' ? name : (nativeName || name);
     return `${script.Abhivadhaye} ${nativeRishis} ${pravaraText} ${script.Pravaranvitha} ${nativeGothra} ${script.Gothraha} ${nativeSuthra} ${script.Suthraha} ${nativeVeda} ${script.Shaaka}${script.Adhyayai} ${script.Sri} ${displayName} ${script.Sarma} ${script.Naam}${script.Aham} ${script.Asmiboho}`;
   };
 
   const generateTranslation = () => {
-    if (!selectedGothraData) return "";
+    if (!selectedGothraData) return '';
     const rishis = [selectedGothraData.Rishi1, selectedGothraData.Rishi2, selectedGothraData.Rishi3].filter(Boolean) as string[];
-    return `\n1. Abhivadaye - I am saluting you.\n2. ${selectedGothraName} gotrah - I belong to the ${selectedGothraName} gotra.\n3. ${rishis.join(", ")} pravaranvita - Names of the Rishis who started ${selectedGothraName} gotra.\n4. ${selectedSuthra} sutrah - the ${selectedSuthra} sutra which I follow.\n5. ${selectedVeda} shakhadhyayi - I learn ${selectedVeda} veda.\n6. Sri ${name} Sharmahamasmi - I am Sri ${name} Sharma.\n7. Bhoh - similar to Sir in English.`.trim();
+    return `\n1. Abhivadaye - I offer my salutations.\n2. ${selectedGothraName} gotrah - I belong to the ${selectedGothraName} gotra.\n3. ${rishis.join(', ')} pravaranvita - the Rishis who founded the ${selectedGothraName} gotra.\n4. ${selectedSuthra} sutrah - I follow the ${selectedSuthra} sutra.\n5. ${selectedVeda} shakhadhyayi - I study the ${selectedVeda} Veda.\n6. Sri ${name} Sharmahamasmi - I am Sri ${name} Sharma.\n7. Bhoh - a term of deep respect, like "Sir".`.trim();
   };
 
   const getSaptarishiInfo = () => {
     if (!selectedGothraData) return null;
-    
     const gothra = selectedGothraName.toLowerCase();
     const rishis = [
-      selectedGothraData.Rishi1, 
-      selectedGothraData.Rishi2, 
-      selectedGothraData.Rishi3
-    ].map(r => r?.toLowerCase() || "");
-
+      selectedGothraData.Rishi1,
+      selectedGothraData.Rishi2,
+      selectedGothraData.Rishi3,
+    ].map(r => r?.toLowerCase() || '');
     const mapping = [
-      { 
-        name: "Vasishtha", 
-        url: "https://vamsha.co.in/rishivamsha/vasishtha",
-        triggers: ["vashista", "koundinya", "paraasara", "upamanyu", "kapinjala", "kundina"]
-      },
-      { 
-        name: "Vishwamitra", 
-        url: "https://vamsha.co.in/rishivamsha/vishwamitra",
-        triggers: ["koushika", "viswamitra", "kalabodhana", "chikitasa", "daivaratasa", "devaraata", "aghamarshana"]
-      },
-      { 
-        name: "Bharadvaja", 
-        url: "https://vamsha.co.in/rishivamsha/bharadvaja",
-        triggers: ["bharadwaja", "garga", "gargyasa", "kapi", "kapila", "kanva", "angirasa", "bhaarhaspatya"]
-      },
-      { 
-        name: "Kashyapa", 
-        url: "https://vamsha.co.in/rishivamsha/kashyapa",
-        triggers: ["kashyapa", "kasyapa", "sandilya", "naitruva", "naitruvakaasyapa", "asitha", "daivala"]
-      },
-      { 
-        name: "Atri", 
-        url: "https://vamsha.co.in/rishivamsha/atri",
-        triggers: ["atreya", "atri", "krishnatreya", "gavisthira", "vadhbhutaka", "archanaasa", "syaavaasva"]
-      },
-      { 
-        name: "Gautama", 
-        url: "https://vamsha.co.in/rishivamsha/gautama",
-        triggers: ["gautama", "gautamasa", "ayasya", "aayasyasa", "sharadvan"]
-      },
-      { 
-        name: "Jamadagni", 
-        url: "https://vamsha.co.in/rishivamsha/jamadagni",
-        triggers: ["jamadagni", "bhrigu", "bhargava", "vatsa", "srivatsa", "bidasa", "maitreya", "chyavana", "apnuvat", "aurava"]
-      }
+      { name: 'Vasishtha', url: 'https://vamsha.co.in/rishivamsha/vasishtha', triggers: ['vashista', 'koundinya', 'paraasara', 'upamanyu', 'kapinjala', 'kundina'] },
+      { name: 'Vishwamitra', url: 'https://vamsha.co.in/rishivamsha/vishwamitra', triggers: ['koushika', 'viswamitra', 'kalabodhana', 'chikitasa', 'daivaratasa', 'devaraata', 'aghamarshana'] },
+      { name: 'Bharadvaja', url: 'https://vamsha.co.in/rishivamsha/bharadvaja', triggers: ['bharadwaja', 'garga', 'gargyasa', 'kapi', 'kapila', 'kanva', 'angirasa', 'bhaarhaspatya'] },
+      { name: 'Kashyapa', url: 'https://vamsha.co.in/rishivamsha/kashyapa', triggers: ['kashyapa', 'kasyapa', 'sandilya', 'naitruva', 'naitruvakaasyapa', 'asitha', 'daivala'] },
+      { name: 'Atri', url: 'https://vamsha.co.in/rishivamsha/atri', triggers: ['atreya', 'atri', 'krishnatreya', 'gavisthira', 'vadhbhutaka', 'archanaasa', 'syaavaasva'] },
+      { name: 'Gautama', url: 'https://vamsha.co.in/rishivamsha/gautama', triggers: ['gautama', 'gautamasa', 'ayasya', 'aayasyasa', 'sharadvan'] },
+      { name: 'Jamadagni', url: 'https://vamsha.co.in/rishivamsha/jamadagni', triggers: ['jamadagni', 'bhrigu', 'bhargava', 'vatsa', 'srivatsa', 'bidasa', 'maitreya', 'chyavana', 'apnuvat', 'aurava'] },
     ];
-
-    // Try to find by Gothra name first, then by primary Rishis
-    return mapping.find(m => 
-      m.triggers.some(t => gothra.includes(t)) || 
+    return mapping.find(m =>
+      m.triggers.some(t => gothra.includes(t)) ||
       m.triggers.some(t => rishis.some(r => r.includes(t)))
-    ) || { name: "Saptarishi", url: "https://vamsha.co.in" };
+    ) || { name: 'Saptarishi', url: 'https://vamsha.co.in' };
   };
 
   const RISHI_LORE: Record<string, string> = {
-    "Vasishtha": "Sage Vasishtha is the mind-born son of Brahma and the possessor of Nandini, the divine cow of plenty. He is revered as the author of the 7th Mandala of the Rig Veda.",
-    "Vishwamitra": "Born a powerful King (Kaushika), Vishwamitra attained the title of Brahmarishi through intense penance. He is the seer of the sacred Gayatri Mantra.",
-    "Bharadvaja": "A master of both spiritual and worldly sciences, Sage Bharadvaja is credited with the 'Yantra Sarvasva', an ancient text on aeronautics and mechanical sciences.",
-    "Kashyapa": "Known as the father of all living beings, Sage Kashyapa's lineage includes Devas, Asuras, and all creatures, symbolizing the unity of all life.",
-    "Atri": "Sage Atri is one of the Saptarishis whose power of penance was so great that he and his wife Anasuya were chosen as parents by the Trimurti (Dattatreya).",
-    "Gautama": "Sage Gautama is the author of the Nyaya Sutras, the foundation of logic in Indian philosophy. He is also the one who brought the river Godavari to earth.",
-    "Jamadagni": "Known for his mastery over weapons and scriptures, Sage Jamadagni is the father of Parashurama. His lineage represents the perfect union of wisdom and valor."
+    'Vasishtha': 'Sage Vasishtha is the mind-born son of Brahma and keeper of Nandini, the divine cow of plenty. He is revered as the seer of the 7th Mandala of the Rig Veda.',
+    'Vishwamitra': 'Born a powerful king (Kaushika), Vishwamitra attained the title of Brahmarishi through intense penance. He is the seer of the sacred Gayatri Mantra.',
+    'Bharadvaja': 'A master of both spiritual and worldly sciences, Sage Bharadvaja is credited with the Yantra Sarvasva, an ancient text on mechanics and aeronautics.',
+    'Kashyapa': 'Known as a father of all living beings, Sage Kashyapa’s lineage includes devas, asuras and every creature — a symbol of the unity of all life.',
+    'Atri': 'Sage Atri is one of the Saptarishis whose penance was so great that he and his wife Anasuya were chosen as parents by the Trimurti (Dattatreya).',
+    'Gautama': 'Sage Gautama is the author of the Nyaya Sutras, the foundation of logic in Indian philosophy, and the one who brought the river Godavari to earth.',
+    'Jamadagni': 'Known for his mastery over both weapons and scriptures, Sage Jamadagni is the father of Parashurama — the perfect union of wisdom and valour.',
   };
 
   const saptarishi = getSaptarishiInfo();
   const rishiLore = saptarishi ? RISHI_LORE[saptarishi.name] : null;
 
+  // Words for karaoke highlighting
+  const words = useMemo(
+    () => (isGenerated ? getGeneratedText(activeLang).split(/\s+/).filter(Boolean) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isGenerated, activeLang, selectedGothraData, name, nativeName, selectedVeda, selectedSuthra]
+  );
+
+  // Honest, data-derived stats (no fabricated counters)
+  const gothraCount = uniqueGothraNames.length;
+  const lineageCount = abhivadhayeData.length;
+
+  // ---- Recite (native browser voice) ----
+  const pickVoice = (code: string): SpeechSynthesisVoice | null => {
+    if (!ttsSupported) return null;
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices.length) return null;
+    const exact = voices.find(v => v.lang && v.lang.toLowerCase() === code.toLowerCase());
+    if (exact) return exact;
+    const base = code.split('-')[0].toLowerCase();
+    return voices.find(v => v.lang && v.lang.toLowerCase().startsWith(base)) || null;
+  };
+
+  const speakFrom = (start: number) => {
+    if (!ttsSupported || !words.length) return;
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    const code = LANG_META[activeLang].code;
+    const voice = pickVoice(code);
+    speechFlag.current.cancelled = false;
+    setIsSpeaking(true);
+    setIsPaused(false);
+    const speakIdx = (i: number) => {
+      if (speechFlag.current.cancelled) return;
+      if (i >= words.length) {
+        setIsSpeaking(false);
+        setActiveWordIndex(-1);
+        return;
+      }
+      setActiveWordIndex(i);
+      const u = new SpeechSynthesisUtterance(words[i]);
+      u.lang = code;
+      if (voice) u.voice = voice;
+      u.rate = rate;
+      u.pitch = 1;
+      u.onend = () => { if (!speechFlag.current.cancelled) speakIdx(i + 1); };
+      u.onerror = () => { if (!speechFlag.current.cancelled) speakIdx(i + 1); };
+      synth.speak(u);
+    };
+    speakIdx(start);
+  };
+
+  const handlePlayPause = () => {
+    if (!ttsSupported) return;
+    const synth = window.speechSynthesis;
+    if (!isSpeaking) {
+      speakFrom(0);
+    } else if (isPaused) {
+      synth.resume();
+      setIsPaused(false);
+    } else {
+      synth.pause();
+      setIsPaused(true);
+    }
+  };
+
+  const handleRestart = () => {
+    stopSpeech();
+    setTimeout(() => speakFrom(0), 60);
+  };
+
+  const changeRate = (r: number) => {
+    setRate(r);
+    if (isSpeaking) {
+      const resumeAt = Math.max(activeWordIndex, 0);
+      stopSpeech();
+      setTimeout(() => speakFrom(resumeAt), 60);
+    }
+  };
+
+  // ---- Vāgdhenu AI chant (beta) ----
+  const runChant = async () => {
+    setChantState('loading');
+    setChantUrl('');
+    const text = getGeneratedText('Hindi'); // Devanagari gives the model the cleanest input
+    try {
+      const post = await fetch(`${VAG_BASE}/gradio_api/call/synthesize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: [text, '__auto__', 60] }),
+      });
+      if (!post.ok) throw new Error('post_failed');
+      const { event_id } = await post.json();
+      if (!event_id) throw new Error('no_event');
+      const res = await fetch(`${VAG_BASE}/gradio_api/call/synthesize/${event_id}`);
+      if (!res.ok || !res.body) throw new Error('stream_failed');
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let audioUrl = '';
+      const started = Date.now();
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const chunks = buffer.split('\n\n');
+        buffer = chunks.pop() || '';
+        for (const chunk of chunks) {
+          const lines = chunk.split('\n');
+          const ev = lines.find(l => l.startsWith('event:'))?.slice(6).trim();
+          const dataRaw = lines.find(l => l.startsWith('data:'))?.slice(5).trim();
+          if (ev === 'complete' && dataRaw) {
+            try {
+              const arr = JSON.parse(dataRaw);
+              const a = arr && arr[0];
+              audioUrl = (a && a.url) ? a.url : (a && a.path ? `${VAG_BASE}/gradio_api/file=${a.path}` : '');
+            } catch { /* ignore */ }
+          } else if (ev === 'error') {
+            throw new Error('space_error');
+          }
+        }
+        if (audioUrl) break;
+        if (Date.now() - started > 120000) throw new Error('timeout');
+      }
+      if (!audioUrl) throw new Error('no_audio');
+      setChantUrl(audioUrl);
+      setChantState('ready');
+    } catch (e) {
+      console.error('Vāgdhenu chant failed:', e);
+      setChantState('error');
+    }
+  };
+
+  const openVagdhenu = () => {
+    try { navigator.clipboard?.writeText(getGeneratedText('Hindi')); } catch { /* ignore */ }
+    window.open(VAG_BASE, '_blank', 'noopener,noreferrer');
+  };
+
+  const langClass = LANG_META[activeLang].cls;
+  const isNative = activeLang !== 'English';
+
   return (
     <div className="app-container">
-      <div className="hero-section">
-        <div className="hero-overlay">
-          <h1 className="hero-title animate-fade-in">Abhivadhaye</h1>
-          <p className="hero-subtitle animate-slide-up">Honor Your Sacred Lineage. Connect with Your Vedic Roots.</p>
-        </div>
-      </div>
-
-      <div className="content-wrapper">
-        <div className="info-grid">
-          <div className="info-card info-card-main">
-            <h3><FaOm /> The Sacred Tradition</h3>
-            <p>Abhivadhaye is a profound Vedic ritual where one declares their ancestral lineage. It is more than just a name; it is a bridge to your Sages (Rishis), your Gothra, and the wisdom of the Vedas.</p>
-          </div>
-          <div className="info-card">
-            <h3><FaHistory /> Why it Matters</h3>
-            <ul>
-              <li><FaUserCheck /> Blessings of the Elders</li>
-              <li><FaUserCheck /> Lineage Preservation</li>
-              <li><FaUserCheck /> Spiritual Grounding</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="stepper-section">
-          <div className="step-item"><span className="step-num">1</span> Select Gothra</div>
-          <div className="step-arrow">→</div>
-          <div className="step-item"><span className="step-num">2</span> Confirm Rishis</div>
-          <div className="step-arrow">→</div>
-          <div className="step-item"><span className="step-num">3</span> Get Mantra</div>
-        </div>
-
-        <div className="main-content-layout">
-          <div className="form-card card-shadow">
-            <div className="tab-switcher">
-              <button 
-                className={`tab-btn ${activeTab === 'expert' ? 'active' : ''}`}
-                onClick={() => setActiveTab('expert')}
-              >
-                I know my details
+      {/* ===================== HERO ===================== */}
+      <header className="hero">
+        <div className="hero-inner">
+          <div className="hero-copy">
+            <span className="hero-eyebrow"><FaOm /> The Vedic salutation of lineage</span>
+            <h1 className="hero-title">Abhivadhaye</h1>
+            <p className="hero-sub-native lang-hi">अभिवादये</p>
+            <p className="hero-lede">
+              Reciting your Abhivadhaye is how you introduce yourself to your elders and to the divine —
+              naming the Rishis, Gothra, Suthra and Veda of your family line. Generate yours accurately,
+              in four scripts, and <strong>learn to recite it aloud</strong>.
+            </p>
+            <div className="hero-cta-row">
+              <button className="btn btn-primary" onClick={() => scrollTo('generator')}>
+                <FaFeather /> Create my Abhivadhaye
               </button>
-              <button 
-                className={`tab-btn ${activeTab === 'guided' ? 'active' : ''}`}
-                onClick={() => setActiveTab('guided')}
-              >
-                Help me find my lineage
+              <button className="btn btn-ghost" onClick={() => scrollTo('guide')}>
+                <FaPrayingHands /> How it works
               </button>
             </div>
+            <div className="hero-badges">
+              <div className="hero-badge"><b>{gothraCount}+</b><span>Gothras mapped</span></div>
+              <div className="hero-badge"><b>4</b><span>Scripts &amp; voice</span></div>
+              <div className="hero-badge"><b>{lineageCount}</b><span>Rishi lineages</span></div>
+            </div>
+          </div>
+          <div className="hero-art-wrap">
+            <div className="hero-glow" />
+            <img className="hero-art" src="/img/hero-blessing.jpg" alt="A child offering Abhivadanam and receiving the blessings of elders" loading="eager" />
+          </div>
+        </div>
+      </header>
 
-            {guidedNotice && (
-              <div className="guided-notice animate-fade-in">
-                <span>{guidedNotice}</span>
-                <button onClick={() => setGuidedNotice('')}>×</button>
+      <div className="wrap">
+        {/* ===================== INTRO CARDS ===================== */}
+        <div className="intro-grid">
+          <div className="intro-card">
+            <div className="ic-icon"><FaOm /></div>
+            <h3>A Sacred Introduction</h3>
+            <p>More than a name, the Abhivadhaye declares the Sages, Gothra and Veda you descend from — a living thread to thousands of years of ancestry.</p>
+          </div>
+          <div className="intro-card">
+            <div className="ic-icon"><FaHistory /></div>
+            <h3>Why it Matters</h3>
+            <p>Offered when greeting elders and during rituals, it earns their blessings, preserves your family lineage, and grounds you in who you are.</p>
+          </div>
+          <div className="intro-card">
+            <div className="ic-icon"><FaLanguage /></div>
+            <h3>In Your Script</h3>
+            <p>See and hear your Abhivadhaye in English, Devanagari, Tamil and Telugu — then practise it aloud, word by word, until it is yours.</p>
+          </div>
+        </div>
+
+        {/* ===================== GENERATOR ===================== */}
+        <section id="generator" className="section">
+          <div className="section-kicker">Your Salutation</div>
+          <h2 className="section-title">Generate your <span>Abhivadhaye</span></h2>
+          <div className="divider-om"><FaOm /></div>
+
+          <div className="gen-layout">
+            <div className="generator">
+              <div className="gen-head">
+                <h2>Build it in three steps</h2>
+                <p>Choose your details below. Not sure? Use “Help me find my lineage”.</p>
+                <div className="stepper">
+                  <div className="step"><span className="step-num">1</span> Gothra</div>
+                  <div className="step-line" />
+                  <div className="step"><span className="step-num">2</span> Confirm Rishis</div>
+                  <div className="step-line" />
+                  <div className="step"><span className="step-num">3</span> Recite</div>
+                </div>
               </div>
-            )}
 
-            {activeTab === 'expert' ? (
-              <div className="animate-fade-in">
-                <div className="form-group">
-                  <label><FaInfoCircle /> Select Your Gothra</label>
-                  <Select
-                    value={selectedGothraName ? { value: selectedGothraName, label: selectedGothraName } : null}
-                    options={uniqueGothraNames.map((g) => ({ value: g, label: g }))}
-                    onChange={(opt) => { 
-                      const val = (opt as SelectOption)?.value || '';
-                      setSelectedGothraName(val); 
-                      setSelectedVariationIndex(0); 
-                      setIsGenerated(false); 
-                      setGuidedNotice('');
-                    }}
-                    placeholder="Search your Gothra..."
-                    className="custom-select"
-                    classNamePrefix="react-select"
-                  />
+              <div className="gen-body">
+                <div className="tabs">
+                  <button className={`tab ${activeTab === 'expert' ? 'active' : ''}`} onClick={() => setActiveTab('expert')}>I know my details</button>
+                  <button className={`tab ${activeTab === 'guided' ? 'active' : ''}`} onClick={() => setActiveTab('guided')}>Help me find my lineage</button>
                 </div>
 
-                {availableVariations.length > 1 && (
-                  <div className="variation-panel">
-                    <p className="panel-label"><FaInfoCircle /> Choose your family's Rishi combination:</p>
-                    <div className="variation-grid">
-                      {availableVariations.map((v: AbhivadhayeRecord, idx: number) => (
-                        <div 
-                          key={idx} 
-                          className={`variation-chip ${selectedVariationIndex === idx ? 'active' : ''}`} 
-                          onClick={() => { setSelectedVariationIndex(idx); setIsGenerated(false); }}
-                        >
-                          {[v.Rishi1, v.Rishi2, v.Rishi3].filter(Boolean).join(", ")}
+                {guidedNotice && (
+                  <div className="notice animate-fade-in">
+                    <span>{guidedNotice}</span>
+                    <button onClick={() => setGuidedNotice('')}>×</button>
+                  </div>
+                )}
+
+                {activeTab === 'expert' ? (
+                  <div className="animate-fade-in">
+                    <div className="field">
+                      <label><FaInfoCircle /> Select your Gothra</label>
+                      <Select
+                        value={selectedGothraName ? { value: selectedGothraName, label: selectedGothraName } : null}
+                        options={uniqueGothraNames.map((g) => ({ value: g, label: g }))}
+                        onChange={(opt) => {
+                          const val = (opt as SelectOption)?.value || '';
+                          setSelectedGothraName(val);
+                          setSelectedVariationIndex(0);
+                          resetOnEdit();
+                          setGuidedNotice('');
+                        }}
+                        placeholder="Search your Gothra..."
+                        classNamePrefix="rs"
+                      />
+                    </div>
+
+                    {availableVariations.length > 1 && (
+                      <div className="variation-panel">
+                        <p className="panel-label"><FaInfoCircle /> Choose your family’s Rishi combination:</p>
+                        <div className="chips">
+                          {availableVariations.map((v: AbhivadhayeRecord, idx: number) => (
+                            <div
+                              key={idx}
+                              className={`chip ${selectedVariationIndex === idx ? 'active' : ''}`}
+                              onClick={() => { setSelectedVariationIndex(idx); resetOnEdit(); }}
+                            >
+                              {[v.Rishi1, v.Rishi2, v.Rishi3].filter(Boolean).join(', ')}
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      </div>
+                    )}
+
+                    <div className="field-row">
+                      <div className="field flex-1">
+                        <label>Veda</label>
+                        <Select
+                          value={selectedVeda ? { value: selectedVeda, label: selectedVeda } : null}
+                          options={uniqueVedas.map((v) => ({ value: v, label: v }))}
+                          onChange={(opt) => { const val = (opt as SelectOption)?.value || ''; setSelectedVeda(val); resetOnEdit(); }}
+                          placeholder="Select Veda"
+                          classNamePrefix="rs"
+                        />
+                      </div>
+                      <div className="field flex-1">
+                        <label>Suthra</label>
+                        <Select
+                          value={selectedSuthra ? { value: selectedSuthra, label: selectedSuthra } : null}
+                          options={filteredSuthras.map((s) => ({ value: s, label: s }))}
+                          onChange={(opt) => { const val = (opt as SelectOption)?.value || ''; setSelectedSuthra(val); resetOnEdit(); }}
+                          placeholder="Select Suthra"
+                          classNamePrefix="rs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="animate-fade-in">
+                    <div className="field">
+                      <label><FaInfoCircle /> Search by Gothra or Rishi name</label>
+                      <input
+                        type="text"
+                        className="text-input"
+                        placeholder="e.g. Bharadwaja or Angirasa..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    <div className="lineage-results">
+                      {filteredLineages.length > 0 ? (
+                        <div className="lineage-grid">
+                          {filteredLineages.map((item, idx) => {
+                            const cleanG = item.Gothra.replace(/\s\d+$/, '');
+                            const veda = item.Veda || SUGGESTED_DEFAULTS[cleanG]?.veda;
+                            const suthra = item.Suthra || SUGGESTED_DEFAULTS[cleanG]?.suthra;
+                            const isSuggested = !item.Veda && SUGGESTED_DEFAULTS[cleanG];
+                            return (
+                              <div key={idx} className="lineage-card" onClick={() => handleSelectLineage(item)}>
+                                <div className="lc-gothra">{cleanG}</div>
+                                <div className="lc-rishis">{[item.Rishi1, item.Rishi2, item.Rishi3].filter(Boolean).join(', ')}</div>
+                                <div className="lc-meta">
+                                  <span className={isSuggested ? 'suggested-tag' : ''}>{isSuggested ? 'Suggested: ' : ''}{veda || 'Unknown'} Veda</span>
+                                  <span>•</span>
+                                  <span>{suthra || 'Unknown'} Suthra</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : searchQuery.length >= 2 ? (
+                        <p className="no-results">No exact match found. Try a different spelling, or use the “I know my details” tab.</p>
+                      ) : (
+                        <p className="search-hint">Start typing your Gothra or a Rishi’s name to see matches…</p>
+                      )}
                     </div>
                   </div>
                 )}
 
-                <div className="form-row">
-                  <div className="form-group flex-1">
-                    <label>Veda</label>
-                    <Select 
-                      value={selectedVeda ? { value: selectedVeda, label: selectedVeda } : null}
-                      options={uniqueVedas.map((v) => ({ value: v, label: v }))} 
-                      onChange={(opt) => { 
-                        const val = (opt as SelectOption)?.value || '';
-                        setSelectedVeda(val); 
-                        setIsGenerated(false); 
-                      }} 
-                      placeholder="Select Veda" 
-                      className="custom-select" 
-                      classNamePrefix="react-select"
-                    />
-                  </div>
-                  <div className="form-group flex-1">
-                    <label>Suthra</label>
-                    <Select 
-                      value={selectedSuthra ? { value: selectedSuthra, label: selectedSuthra } : null}
-                      options={filteredSuthras.map((s) => ({ value: s, label: s }))} 
-                      onChange={(opt) => { 
-                        const val = (opt as SelectOption)?.value || '';
-                        setSelectedSuthra(val); 
-                        setIsGenerated(false); 
-                      }} 
-                      placeholder="Select Suthra" 
-                      className="custom-select" 
-                      classNamePrefix="react-select"
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="guided-lookup animate-fade-in">
-                <div className="form-group">
-                  <label><FaInfoCircle /> Search by Gothra or Rishi name</label>
-                  <input 
+                <div className="field">
+                  <label>Your Name (English)</label>
+                  <input
                     type="text"
-                    className="custom-input"
-                    placeholder="e.g. Bharadwaja or Angirasa..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    value={name}
+                    onChange={(e) => { setName(e.target.value); resetOnEdit(); }}
+                    placeholder="e.g. Rama"
+                    className="text-input"
                   />
                 </div>
-                
-                <div className="lineage-results">
-                  {filteredLineages.length > 0 ? (
-                    <div className="lineage-grid">
-                      {filteredLineages.map((item, idx) => {
-                        const cleanG = item.Gothra.replace(/\s\d+$/, '');
-                        const veda = item.Veda || SUGGESTED_DEFAULTS[cleanG]?.veda;
-                        const suthra = item.Suthra || SUGGESTED_DEFAULTS[cleanG]?.suthra;
-                        const isSuggested = !item.Veda && SUGGESTED_DEFAULTS[cleanG];
 
-                        return (
-                          <div key={idx} className="lineage-card" onClick={() => handleSelectLineage(item)}>
-                            <div className="lc-gothra">{cleanG}</div>
-                            <div className="lc-rishis">{[item.Rishi1, item.Rishi2, item.Rishi3].filter(Boolean).join(", ")}</div>
-                            <div className="lc-meta">
-                              <span className={isSuggested ? 'suggested-tag' : ''}>
-                                {isSuggested ? 'Suggested: ' : ''}{veda || 'Unknown'} Veda
-                              </span>
-                              <span>•</span>
-                              <span>{suthra || 'Unknown'} Suthra</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : searchQuery.length >= 2 ? (
-                    <p className="no-results">No exact match found. Try a different spelling or use the expert tab.</p>
-                  ) : (
-                    <p className="search-hint">Start typing your Gothra to see matches...</p>
-                  )}
-                </div>
+                {activeLang !== 'English' && (
+                  <div className="field animate-fade-in">
+                    <label>Your Name in {LANG_META[activeLang].label}</label>
+                    <input
+                      type="text"
+                      value={nativeName}
+                      onChange={(e) => setNativeName(e.target.value)}
+                      placeholder={activeLang === 'Hindi' ? 'e.g. राम' : activeLang === 'Tamil' ? 'e.g. ராம' : 'e.g. రామ'}
+                      className={`text-input native-input ${langClass}`}
+                    />
+                    <span className="input-hint"><FaLanguage /> Edit if the transliteration needs correcting — this is what will be spoken and shown.</span>
+                  </div>
+                )}
+
+                <button onClick={handleGenerate} className="btn btn-primary btn-block generate-btn">
+                  Reveal my Abhivadhaye <FaFeather />
+                </button>
               </div>
-            )}
-
-            <div className="form-group">
-              <label>Your Name (English)</label>
-              <input 
-                type="text" 
-                value={name} 
-                onChange={(e) => { setName(e.target.value); setIsGenerated(false); }} 
-                placeholder="e.g. Rama Sharma" 
-                className="custom-input" 
-              />
             </div>
 
-            {activeLang !== 'English' && (
-              <div className="form-group animate-fade-in">
-                <label>Your Name in {activeLang}</label>
-                <input 
-                  type="text" 
-                  value={nativeName} 
-                  onChange={(e) => setNativeName(e.target.value)} 
-                  placeholder={`e.g. ${activeLang === 'Hindi' ? 'राम शर्मा' : 'రామ శర్మ'}`} 
-                  className="custom-input native-input" 
-                />
-                <span className="input-hint"><FaLanguage /> Edit if the transliteration needs correction.</span>
+            {/* Side column */}
+            <aside className="side-col">
+              <div className="stat-card">
+                <h4>What’s inside</h4>
+                <div className="stat-row">
+                  <div className="stat"><b>{gothraCount}+</b><span>Gothras</span></div>
+                  <div className="stat"><b>{lineageCount}</b><span>Lineages</span></div>
+                  <div className="stat"><b>4</b><span>Scripts</span></div>
+                </div>
               </div>
-            )}
-
-            <button onClick={handleGenerate} className="glow-button">
-              Reveal My Abhivadhaye <FaFeather />
-            </button>
+              <div className="wisdom">
+                <h5><FaLightbulb /> Wisdom of the Sages</h5>
+                <p key={factIndex} className="animate-fade-in">{VEDIC_FACTS[factIndex]}</p>
+              </div>
+            </aside>
           </div>
+        </section>
 
-          <div className="stats-card card-shadow">
-            <div className="stats-icon"><FaOm /></div>
-            <h4>{pageVisits}+</h4>
-            <p>Abhivadhayes Served</p>
-            <div className="did-you-know">
-              <h5><FaLightbulb /> Wisdom of the Sages</h5>
-              <div key={factIndex} className="fact-container animate-fade-in">
-                <p>{VEDIC_FACTS[factIndex]}</p>
+        {/* ===================== RESULT ===================== */}
+        {isGenerated && (
+          <section id="result-section" className="result animate-scale-up">
+            <div className="result-head">
+              <h3>Your Abhivadhaye</h3>
+              <p>Sacred lineage of Sri {name}</p>
+            </div>
+
+            <div className="lang-bar">
+              {(['English', 'Hindi', 'Tamil', 'Telugu'] as Language[]).map((l) => (
+                <button
+                  key={l}
+                  className={`lang-btn ${activeLang === l ? 'active' : ''} ${LANG_META[l].cls}`}
+                  onClick={() => { setActiveLang(l); stopSpeech(); }}
+                >
+                  {LANG_META[l].label}
+                </button>
+              ))}
+            </div>
+
+            <div className="result-body">
+              {/* Readable mantra with karaoke highlighting */}
+              <div className="mantra-display">
+                <div className="md-label">Recite this</div>
+                <p className={`mantra-text ${isNative ? 'native-font ' + langClass : ''}`}>
+                  {words.map((w, i) => (
+                    <span
+                      key={i}
+                      className={`mantra-word ${i === activeWordIndex ? 'active' : (i < activeWordIndex ? 'spoken' : '')}`}
+                    >
+                      {w}{' '}
+                    </span>
+                  ))}
+                </p>
+              </div>
+
+              {/* Recite player */}
+              <div className="recite">
+                <div className="recite-top">
+                  <div className="recite-title"><FaPrayingHands /> Play &amp; recite along</div>
+                  <div className="recite-lang-note">
+                    {isNative ? `Voice: ${LANG_META[activeLang].label}` : 'Tip: switch to हिन्दी for the clearest chant'}
+                  </div>
+                </div>
+
+                {ttsSupported ? (
+                  <>
+                    <div className="recite-controls">
+                      <button className="rec-btn rec-play" onClick={handlePlayPause}>
+                        {isSpeaking && !isPaused ? <><FaPause /> Pause</> : <><FaPlay /> {isPaused ? 'Resume' : 'Play'}</>}
+                      </button>
+                      <button className="rec-btn rec-icon" onClick={handleRestart} title="Start again" disabled={!words.length}><FaUndo /></button>
+                      <div className="speed-group" role="group" aria-label="Speed">
+                        {[0.7, 0.8, 1].map((r) => (
+                          <button key={r} className={`speed-btn ${rate === r ? 'active' : ''}`} onClick={() => changeRate(r)}>
+                            {r === 1 ? '1×' : r === 0.8 ? '0.8×' : '0.7×'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="recite-status">
+                      {isSpeaking && !isPaused && <><FaSpinner className="spin" /> Reciting… follow the highlighted words</>}
+                      {isPaused && 'Paused'}
+                    </div>
+                  </>
+                ) : (
+                  <p className="recite-unavailable">Your browser doesn’t support voice playback. Use the AI Chant below, or read the highlighted mantra above.</p>
+                )}
+
+                {/* AI Chant (beta) — Vāgdhenu */}
+                <div className="chant-beta">
+                  <div className="chant-row">
+                    <button className="chant-btn" onClick={runChant} disabled={chantState === 'loading'}>
+                      {chantState === 'loading' ? <><FaSpinner className="spin" /> Composing chant…</> : <><FaMusic /> AI Chant</>}
+                      <span className="beta-tag">BETA</span>
+                    </button>
+                    {chantState === 'error' && (
+                      <button className="chant-btn" onClick={openVagdhenu}><FaExternalLinkAlt /> Open Vāgdhenu</button>
+                    )}
+                  </div>
+
+                  {chantState === 'loading' && (
+                    <p className="chant-note">Warming up the chant model — this can take 10–60 seconds on the first run. Please keep this tab open.</p>
+                  )}
+                  {chantState === 'ready' && chantUrl && (
+                    <audio className="chant-audio" src={chantUrl} controls autoPlay />
+                  )}
+                  {chantState === 'error' && (
+                    <p className="chant-note">The live chant model is busy or unreachable right now. You can try again, or open the Vāgdhenu demo (your Sanskrit text has been copied — just paste and generate).</p>
+                  )}
+                  <p className="chant-note">
+                    <FaMagic /> AI Chant sings the Sanskrit using <a href="https://prathosh.in/vagdhenu/" target="_blank" rel="noopener noreferrer">Vāgdhenu</a>, a Sanskrit chant model by Dr. Prathosh A.P. It is experimental and works best on metered verse, so results for a spoken lineage declaration may vary.
+                  </p>
+                </div>
+              </div>
+
+              {/* Share card (image export) */}
+              <div className="live-card-container">
+                <div className="live-card-preview" ref={cardContainerRef}>
+                  <div className="live-card-scaler" style={{ transform: `scale(${scale})` }}>
+                    <div className="share-card" id="live-share-card">
+                      <div className="sc-border">
+                        <div className="sc-header">
+                          <div className="sc-logo-box"><FaOm /></div>
+                          <div className="sc-title">ABHIVADHAYE</div>
+                          <div className="sc-divider" />
+                        </div>
+                        <div className="sc-content">
+                          <div className="sc-mantra-box">
+                            <p className={`sc-mantra ${isNative ? 'native-font' : ''}`}>{getGeneratedText(activeLang)}</p>
+                          </div>
+                          <div className="sc-identity">
+                            <div className="sc-label">Sacred Lineage of</div>
+                            <div className="sc-name">Sri {name}</div>
+                            <div className="sc-gothra-tag">{selectedGothraName} Gothra</div>
+                          </div>
+                        </div>
+                        <div className="sc-footer">
+                          <p>Create yours at <strong>abhivadhaye.in</strong></p>
+                          <p className="sc-tagline">Honour your roots • Preserve Vedic wisdom</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="action-row">
+                  <button onClick={() => { navigator.clipboard.writeText(getGeneratedText(activeLang)); alert('Copied to clipboard!'); }} className="action-btn copy"><FaCopy /> Copy text</button>
+                  <button onClick={handleDownloadImage} className="action-btn dl"><FaDownload /> Save image</button>
+                  <button onClick={handleShareImage} className="action-btn wa"><FaWhatsapp /> WhatsApp</button>
+                  <button onClick={handleShareImage} className="action-btn insta"><FaInstagram /> Instagram</button>
+                </div>
+              </div>
+
+              {/* Meaning */}
+              <div className="meaning">
+                <h4>Meaning &amp; Significance</h4>
+                <p className="meaning-sub">Every phrase you recite, line by line</p>
+                <div className="meaning-grid">
+                  {generateTranslation().split('\n').map((line, index) => {
+                    const parts = line.split(' - ');
+                    if (parts.length === 2) {
+                      const [phrasePart, descriptionPart] = parts;
+                      const phraseParts = phrasePart.split('. ');
+                      if (phraseParts.length === 2) {
+                        return (
+                          <div key={index} className="meaning-item">
+                            <div className="mi-index">{phraseParts[0]}</div>
+                            <div className="mi-phrase">{phraseParts[1]}</div>
+                            <div className="mi-desc">{descriptionPart}</div>
+                          </div>
+                        );
+                      }
+                    }
+                    return null;
+                  })}
+                </div>
+              </div>
+
+              {/* Vamsha bridge */}
+              {saptarishi && (
+                <div className="vamsha animate-fade-in">
+                  <div className="vb-visual">
+                    <div className="vb-node saptarishi-node"><FaOm /><span>{saptarishi.name}</span></div>
+                    <div className="vb-connector" />
+                    <div className="vb-node gothra-node"><FaUserCheck /><span>{selectedGothraName}</span></div>
+                  </div>
+                  <h3>Discover your sacred roots</h3>
+                  <p>The names you just recited are your living legacy. Your <strong>{selectedGothraName}</strong> lineage is a branch of the <strong>{saptarishi.name}</strong> family tree.</p>
+                  {rishiLore && (
+                    <div className="lore"><FaLightbulb /><span><strong>Sage {saptarishi.name}:</strong> {rishiLore}</span></div>
+                  )}
+                  <div className="vb-link">
+                    <a href={saptarishi.url} target="_blank" rel="noopener noreferrer"><FaScroll /> Explore the {saptarishi.name} Vamsha tree</a>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+      </div>
+
+      {/* ===================== NAMASKARAM GUIDE ===================== */}
+      <section id="guide" className="section guide">
+        <div className="wrap">
+          <div className="section-kicker">The Ritual</div>
+          <h2 className="section-title">How to offer <span>Abhivadanam</span></h2>
+          <div className="divider-om"><FaHandsHelping /></div>
+          <div className="guide-inner">
+            <div className="guide-art">
+              <img src="/img/namaskaram.jpg" alt="A young boy in the traditional posture of Abhivadanam" loading="lazy" />
+            </div>
+            <div className="guide-steps">
+              <div className="guide-step">
+                <div className="gs-num">1</div>
+                <div><h4>Stand with focus</h4><p>Face the elder or the sanctum, calm and attentive. Cross your arms so the right hand can reach the right ear and the left the left ear.</p></div>
+              </div>
+              <div className="guide-step">
+                <div className="gs-num">2</div>
+                <div><h4>Touch your ears &amp; recite</h4><p>Holding the ear-lobes, recite your Abhivadhaye clearly — naming your Rishis, Gothra, Suthra, Veda and your name, ending with “Bhoh”.</p></div>
+              </div>
+              <div className="guide-step">
+                <div className="gs-num">3</div>
+                <div><h4>Bow and offer namaskaram</h4><p>Bend forward and touch the elder’s feet with crossed hands (right to right, left to left) to receive their blessings.</p></div>
+              </div>
+              <div className="guide-step">
+                <div className="gs-num">4</div>
+                <div><h4>Receive the blessing</h4><p>The elder rests a hand on your head and blesses you — “Ayushman bhava”, “Chiranjeevi bhava” — completing the exchange.</p></div>
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-        {isGenerated && (
-          <div id="result-section" className="result-card card-shadow animate-scale-up">
-            <div className="lang-bar">
-              {(['English', 'Hindi', 'Tamil', 'Telugu'] as Language[]).map((l) => (
-                <button key={l} className={`lang-btn ${activeLang === l ? 'active' : ''}`} onClick={() => setActiveLang(l)}>{l}</button>
-              ))}
-            </div>
-            
-            <div className="live-card-container">
-              <div className="live-card-preview" ref={cardContainerRef}>
-                <div className="live-card-scaler" style={{ transform: `scale(${scale})` }}>
-                  <div className="share-card" id="live-share-card">
-                    <div className="sc-border">
-                      <div className="sc-header">
-                        <div className="sc-logo-box">
-                          <FaOm />
-                        </div>
-                        <div className="sc-title">ABHIVADHAYE</div>
-                        <div className="sc-divider"></div>
-                      </div>
-                      
-                      <div className="sc-content">
-                        <div className="sc-mantra-box">
-                          <p className={`sc-mantra ${activeLang !== 'English' ? 'native-font' : ''}`}>
-                            {getGeneratedText(activeLang)}
-                          </p>
-                        </div>
-                        
-                        <div className="sc-identity">
-                          <div className="sc-label">Sacred Lineage of</div>
-                          <div className="sc-name">Sri {name}</div>
-                          <div className="sc-gothra-tag">{selectedGothraName} Gothra</div>
-                        </div>
-                      </div>
-
-                      <div className="sc-footer">
-                        <p>Explore your roots at <strong>abhivadhaye.in</strong></p>
-                        <p className="sc-tagline">Honor Your Roots. Preserving Vedic Wisdom.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="action-row">
-                <button onClick={() => { navigator.clipboard.writeText(getGeneratedText(activeLang)); alert('Copied!'); }} className="action-btn"><FaCopy /> Copy Text</button>
-                <button onClick={handleDownloadImage} className="action-btn download-btn"><FaDownload /> Save Image</button>
-                <button onClick={handleShareImage} className="action-btn wa-btn"><FaWhatsapp /> WhatsApp</button>
-                <button onClick={handleShareImage} className="action-btn insta-btn"><FaInstagram /> Instagram</button>
-              </div>
-            </div>
-            <div className="meaning-card">
-              <h4>Meaning & Significance</h4>
-              <div className="meaning-grid">
-                {generateTranslation().split('\n').map((line, index) => {
-                  const parts = line.split(' - ');
-                  if (parts.length === 2) {
-                    const [phrasePart, descriptionPart] = parts;
-                    const phraseParts = phrasePart.split('. ');
-                    if (phraseParts.length === 2) {
-                      const phraseIndex = phraseParts[0];
-                      const phrase = phraseParts[1];
-                      return (
-                        <div key={index} className="meaning-item">
-                          <div className="mi-index">{phraseIndex}.</div>
-                          <div className="mi-phrase">{phrase}</div>
-                          <div className="mi-desc">{descriptionPart}</div>
-                        </div>
-                      );
-                    }
-                  }
-                  return null; // Skip lines that don't match the expected format
-                })}
-              </div>
-            </div>
-
-            {saptarishi && (
-              <div className="vamsha-bridge animate-fade-in">
-                <div className="vb-content">
-                  <div className="vb-visual">
-                    <div className="vb-node saptarishi-node">
-                      <FaOm />
-                      <span>{saptarishi.name}</span>
-                    </div>
-                    <div className="vb-connector"></div>
-                    <div className="vb-node gothra-node">
-                      <FaUserCheck />
-                      <span>{selectedGothraName}</span>
-                    </div>
-                  </div>
-                  <div className="vb-text">
-                    <h3>Discover Your Sacred Roots</h3>
-                    <p>
-                      The names you just recited are more than history—they are your living legacy. 
-                      Your <strong>{selectedGothraName}</strong> lineage is a vital branch of the <strong>{saptarishi.name}</strong> family tree. 
-                    </p>
-                    {rishiLore && (
-                      <div className="rishi-lore-snippet">
-                        <FaLightbulb />
-                        <span><strong>Sage {saptarishi.name}:</strong> {rishiLore}</span>
-                      </div>
-                    )}
-                    <a 
-                      href={saptarishi.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="vb-link-btn"
-                    >
-                      Explore the {saptarishi.name} Vamsha Tree →
-                    </a>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="faq-section">
-          <h2 className="faq-title">Decoding the Ritual: <span>Secrets of the Sages</span></h2>
+      {/* ===================== FAQ ===================== */}
+      <section className="section">
+        <div className="wrap">
+          <div className="section-kicker">Good to know</div>
+          <h2 className="section-title">Decoding the <span>ritual</span></h2>
+          <div className="divider-om"><FaOm /></div>
           <div className="faq-grid">
             {FAQ_DATA.map((item, idx) => (
-              <div 
-                key={idx} 
-                className={`faq-item ${activeFaq === idx ? 'active' : ''}`}
-                onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
-              >
-                <div className="faq-question">
+              <div key={idx} className={`faq-item ${activeFaq === idx ? 'active' : ''}`}>
+                <div className="faq-q" onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}>
                   {item.question}
                   <span className="faq-icon">{activeFaq === idx ? '−' : '+'}</span>
                 </div>
-                {activeFaq === idx && (
-                  <div className="faq-answer animate-fade-in">
-                    {item.answer}
-                  </div>
-                )}
+                {activeFaq === idx && <div className="faq-a animate-fade-in">{item.answer}</div>}
               </div>
             ))}
           </div>
         </div>
+      </section>
 
-        <form 
-          className="feedback-section-new" 
-          name="feedback" 
-          onSubmit={handleSubmitFeedback}
-          data-netlify="true"
-          data-netlify-honeypot="bot-field"
-        >
-          <input type="hidden" name="form-name" value="feedback" />
-          <p className="hidden" style={{ display: 'none' }}>
-            <label>
-              Don't fill this out if you're human: <input name="bot-field" />
-            </label>
-          </p>
-          <h3>Your feedback helps us grow</h3>
-          <textarea 
-            name="message"
-            value={feedback} 
-            onChange={(e) => setFeedback(e.target.value)} 
-            placeholder="How can we make this experience better for you?" 
-            required
-          />
-          <button type="submit">Send Feedback</button>
-        </form>
+      {/* ===================== FEEDBACK ===================== */}
+      <section className="section-tight">
+        <div className="wrap">
+          <form className="feedback" name="feedback" onSubmit={handleSubmitFeedback} data-netlify="true" data-netlify-honeypot="bot-field">
+            <input type="hidden" name="form-name" value="feedback" />
+            <p style={{ display: 'none' }}>
+              <label>Don’t fill this out if you’re human: <input name="bot-field" /></label>
+            </p>
+            <h3>Help us stay accurate</h3>
+            <p className="fb-sub">Found a Gothra, Rishi or spelling that needs fixing? Tell us — real families keep this correct.</p>
+            <textarea name="message" value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="Your suggestion, correction or note…" required />
+            <button type="submit" className="btn btn-primary btn-block">Send feedback</button>
+          </form>
+        </div>
+      </section>
 
-        <AdComponent adSlot="1234567890" />
-      </div>
+      <AdComponent adSlot="1234567890" />
       <Footer />
     </div>
   );
