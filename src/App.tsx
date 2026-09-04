@@ -4,9 +4,8 @@ import Footer from './components/Footer';
 import AdComponent from './components/AdComponent';
 import {
   FaFeather, FaCopy, FaWhatsapp, FaInstagram, FaInfoCircle, FaLanguage,
-  FaHistory, FaOm, FaUserCheck, FaLightbulb, FaDownload, FaPlay, FaPause,
-  FaUndo, FaMusic, FaMagic, FaExternalLinkAlt, FaPrayingHands, FaScroll,
-  FaHandsHelping, FaSpinner
+  FaHistory, FaOm, FaUserCheck, FaLightbulb, FaDownload, FaMusic, FaMagic,
+  FaExternalLinkAlt, FaPrayingHands, FaScroll, FaHandsHelping, FaSpinner
 } from 'react-icons/fa';
 import Select from 'react-select';
 import { toPng } from 'html-to-image';
@@ -326,17 +325,10 @@ const App: React.FC = () => {
   const [scale, setScale] = useState(1);
   const cardContainerRef = React.useRef<HTMLDivElement>(null);
 
-  // --- Recite (SpeechSynthesis) state ---
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [activeWordIndex, setActiveWordIndex] = useState(-1);
-  const [rate, setRate] = useState(0.8);
-  const speechFlag = useRef({ cancelled: false });
-  const ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
-
   // --- Vāgdhenu AI chant state ---
   const [chantState, setChantState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [chantUrl, setChantUrl] = useState('');
+  const chantReqId = useRef(0);
 
   // --- Scaling Logic for Direct Rendering (share card) ---
   useEffect(() => {
@@ -408,18 +400,6 @@ const App: React.FC = () => {
     return () => clearInterval(factInterval);
   }, []);
 
-  // Prime speech voices + cleanup on unmount
-  useEffect(() => {
-    if (!ttsSupported) return;
-    window.speechSynthesis.getVoices();
-    const onVoices = () => window.speechSynthesis.getVoices();
-    window.speechSynthesis.addEventListener?.('voiceschanged', onVoices);
-    return () => {
-      window.speechSynthesis.removeEventListener?.('voiceschanged', onVoices);
-      window.speechSynthesis.cancel();
-    };
-  }, [ttsSupported]);
-
   useEffect(() => {
     if (activeLang !== 'English' && !nativeName) {
       setNativeName(transliteratePhonetic(name, activeLang));
@@ -465,19 +445,15 @@ const App: React.FC = () => {
     ).slice(0, 10);
   }, [searchQuery]);
 
-  const stopSpeech = () => {
-    speechFlag.current.cancelled = true;
-    if (ttsSupported) window.speechSynthesis.cancel();
-    setIsSpeaking(false);
-    setIsPaused(false);
-    setActiveWordIndex(-1);
+  const resetChant = () => {
+    chantReqId.current += 1; // invalidate any in-flight request
+    setChantState('idle');
+    setChantUrl('');
   };
 
   const resetOnEdit = () => {
     setIsGenerated(false);
-    stopSpeech();
-    setChantState('idle');
-    setChantUrl('');
+    resetChant();
   };
 
   const handleSelectLineage = (item: AbhivadhayeRecord) => {
@@ -509,10 +485,8 @@ const App: React.FC = () => {
 
   const handleGenerate = () => {
     if (selectedGothraData && name && selectedVeda && selectedSuthra) {
+      resetChant();
       setIsGenerated(true);
-      stopSpeech();
-      setChantState('idle');
-      setChantUrl('');
       saveSession();
       setTimeout(() => document.getElementById('result-section')?.scrollIntoView({ behavior: 'smooth' }), 100);
     } else {
@@ -676,90 +650,17 @@ const App: React.FC = () => {
   const saptarishi = getSaptarishiInfo();
   const rishiLore = saptarishi ? RISHI_LORE[saptarishi.name] : null;
 
-  // Words for karaoke highlighting
-  const words = useMemo(
-    () => (isGenerated ? getGeneratedText(activeLang).split(/\s+/).filter(Boolean) : []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isGenerated, activeLang, selectedGothraData, name, nativeName, selectedVeda, selectedSuthra]
-  );
-
   // Honest, data-derived stats (no fabricated counters)
   const gothraCount = uniqueGothraNames.length;
   const lineageCount = abhivadhayeData.length;
 
-  // ---- Recite (native browser voice) ----
-  const pickVoice = (code: string): SpeechSynthesisVoice | null => {
-    if (!ttsSupported) return null;
-    const voices = window.speechSynthesis.getVoices();
-    if (!voices.length) return null;
-    const exact = voices.find(v => v.lang && v.lang.toLowerCase() === code.toLowerCase());
-    if (exact) return exact;
-    const base = code.split('-')[0].toLowerCase();
-    return voices.find(v => v.lang && v.lang.toLowerCase().startsWith(base)) || null;
-  };
-
-  const speakFrom = (start: number) => {
-    if (!ttsSupported || !words.length) return;
-    const synth = window.speechSynthesis;
-    synth.cancel();
-    const code = LANG_META[activeLang].code;
-    const voice = pickVoice(code);
-    speechFlag.current.cancelled = false;
-    setIsSpeaking(true);
-    setIsPaused(false);
-    const speakIdx = (i: number) => {
-      if (speechFlag.current.cancelled) return;
-      if (i >= words.length) {
-        setIsSpeaking(false);
-        setActiveWordIndex(-1);
-        return;
-      }
-      setActiveWordIndex(i);
-      const u = new SpeechSynthesisUtterance(words[i]);
-      u.lang = code;
-      if (voice) u.voice = voice;
-      u.rate = rate;
-      u.pitch = 1;
-      u.onend = () => { if (!speechFlag.current.cancelled) speakIdx(i + 1); };
-      u.onerror = () => { if (!speechFlag.current.cancelled) speakIdx(i + 1); };
-      synth.speak(u);
-    };
-    speakIdx(start);
-  };
-
-  const handlePlayPause = () => {
-    if (!ttsSupported) return;
-    const synth = window.speechSynthesis;
-    if (!isSpeaking) {
-      speakFrom(0);
-    } else if (isPaused) {
-      synth.resume();
-      setIsPaused(false);
-    } else {
-      synth.pause();
-      setIsPaused(true);
-    }
-  };
-
-  const handleRestart = () => {
-    stopSpeech();
-    setTimeout(() => speakFrom(0), 60);
-  };
-
-  const changeRate = (r: number) => {
-    setRate(r);
-    if (isSpeaking) {
-      const resumeAt = Math.max(activeWordIndex, 0);
-      stopSpeech();
-      setTimeout(() => speakFrom(resumeAt), 60);
-    }
-  };
-
   // ---- Vāgdhenu AI chant (beta) ----
   const runChant = async () => {
+    const text = getGeneratedText('Hindi'); // Devanagari gives the model the cleanest input
+    if (!text) return;
+    const myId = ++chantReqId.current;
     setChantState('loading');
     setChantUrl('');
-    const text = getGeneratedText('Hindi'); // Devanagari gives the model the cleanest input
     try {
       const post = await fetch(`${VAG_BASE}/gradio_api/call/synthesize`, {
         method: 'POST',
@@ -798,12 +699,14 @@ const App: React.FC = () => {
           }
         }
         if (audioUrl) break;
-        if (Date.now() - started > 120000) throw new Error('timeout');
+        if (Date.now() - started > 180000) throw new Error('timeout');
       }
+      if (myId !== chantReqId.current) return; // superseded by a newer request
       if (!audioUrl) throw new Error('no_audio');
       setChantUrl(audioUrl);
       setChantState('ready');
     } catch (e) {
+      if (myId !== chantReqId.current) return;
       console.error('Vāgdhenu chant failed:', e);
       setChantState('error');
     }
@@ -813,6 +716,15 @@ const App: React.FC = () => {
     try { navigator.clipboard?.writeText(getGeneratedText('Hindi')); } catch { /* ignore */ }
     window.open(VAG_BASE, '_blank', 'noopener,noreferrer');
   };
+
+  // Start preparing the chant automatically the moment a result is shown,
+  // so the model is already warming up (or done) before the user asks for it.
+  useEffect(() => {
+    if (isGenerated && selectedGothraData) {
+      runChant();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isGenerated]);
 
   const langClass = LANG_META[activeLang].cls;
   const isNative = activeLang !== 'English';
@@ -829,7 +741,7 @@ const App: React.FC = () => {
             <p className="hero-lede">
               Reciting your Abhivadhaye is how you introduce yourself to your elders and to the divine —
               naming the Rishis, Gothra, Suthra and Veda of your family line. Generate yours accurately,
-              in four scripts, and <strong>learn to recite it aloud</strong>.
+              in four scripts, and <strong>hear it chanted</strong>.
             </p>
             <div className="hero-cta-row">
               <button className="btn btn-primary" onClick={() => scrollTo('generator')}>
@@ -841,7 +753,7 @@ const App: React.FC = () => {
             </div>
             <div className="hero-badges">
               <div className="hero-badge"><b>{gothraCount}+</b><span>Gothras mapped</span></div>
-              <div className="hero-badge"><b>4</b><span>Scripts &amp; voice</span></div>
+              <div className="hero-badge"><b>4</b><span>Scripts &amp; chant</span></div>
               <div className="hero-badge"><b>{lineageCount}</b><span>Rishi lineages</span></div>
             </div>
           </div>
@@ -868,7 +780,7 @@ const App: React.FC = () => {
           <div className="intro-card">
             <div className="ic-icon"><FaLanguage /></div>
             <h3>In Your Script</h3>
-            <p>See and hear your Abhivadhaye in English, Devanagari, Tamil and Telugu — then practise it aloud, word by word, until it is yours.</p>
+            <p>See your Abhivadhaye in English, Devanagari, Tamil and Telugu — and hear the Sanskrit chanted so you can learn its true sound.</p>
           </div>
         </div>
 
@@ -1027,7 +939,7 @@ const App: React.FC = () => {
                       placeholder={activeLang === 'Hindi' ? 'e.g. राम' : activeLang === 'Tamil' ? 'e.g. ராம' : 'e.g. రామ'}
                       className={`text-input native-input ${langClass}`}
                     />
-                    <span className="input-hint"><FaLanguage /> Edit if the transliteration needs correcting — this is what will be spoken and shown.</span>
+                    <span className="input-hint"><FaLanguage /> Edit if the transliteration needs correcting — this is what will be shown and chanted.</span>
                   </div>
                 )}
 
@@ -1068,7 +980,7 @@ const App: React.FC = () => {
                 <button
                   key={l}
                   className={`lang-btn ${activeLang === l ? 'active' : ''} ${LANG_META[l].cls}`}
-                  onClick={() => { setActiveLang(l); stopSpeech(); }}
+                  onClick={() => setActiveLang(l)}
                 >
                   {LANG_META[l].label}
                 </button>
@@ -1076,79 +988,52 @@ const App: React.FC = () => {
             </div>
 
             <div className="result-body">
-              {/* Readable mantra with karaoke highlighting */}
+              {/* Readable mantra */}
               <div className="mantra-display">
                 <div className="md-label">Recite this</div>
                 <p className={`mantra-text ${isNative ? 'native-font ' + langClass : ''}`}>
-                  {words.map((w, i) => (
-                    <span
-                      key={i}
-                      className={`mantra-word ${i === activeWordIndex ? 'active' : (i < activeWordIndex ? 'spoken' : '')}`}
-                    >
-                      {w}{' '}
-                    </span>
-                  ))}
+                  {getGeneratedText(activeLang)}
                 </p>
               </div>
 
-              {/* Recite player */}
+              {/* Chant player (Vāgdhenu) */}
               <div className="recite">
                 <div className="recite-top">
-                  <div className="recite-title"><FaPrayingHands /> Play &amp; recite along</div>
-                  <div className="recite-lang-note">
-                    {isNative ? `Voice: ${LANG_META[activeLang].label}` : 'Tip: switch to हिन्दी for the clearest chant'}
-                  </div>
+                  <div className="recite-title"><FaMusic /> Hear it chanted</div>
+                  <div className="recite-lang-note">Sanskrit · Vāgdhenu AI <span className="beta-tag">BETA</span></div>
                 </div>
 
-                {ttsSupported ? (
-                  <>
-                    <div className="recite-controls">
-                      <button className="rec-btn rec-play" onClick={handlePlayPause}>
-                        {isSpeaking && !isPaused ? <><FaPause /> Pause</> : <><FaPlay /> {isPaused ? 'Resume' : 'Play'}</>}
-                      </button>
-                      <button className="rec-btn rec-icon" onClick={handleRestart} title="Start again" disabled={!words.length}><FaUndo /></button>
-                      <div className="speed-group" role="group" aria-label="Speed">
-                        {[0.7, 0.8, 1].map((r) => (
-                          <button key={r} className={`speed-btn ${rate === r ? 'active' : ''}`} onClick={() => changeRate(r)}>
-                            {r === 1 ? '1×' : r === 0.8 ? '0.8×' : '0.7×'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="recite-status">
-                      {isSpeaking && !isPaused && <><FaSpinner className="spin" /> Reciting… follow the highlighted words</>}
-                      {isPaused && 'Paused'}
-                    </div>
-                  </>
-                ) : (
-                  <p className="recite-unavailable">Your browser doesn’t support voice playback. Use the AI Chant below, or read the highlighted mantra above.</p>
+                {chantState === 'loading' && (
+                  <div className="chant-loading"><FaSpinner className="spin" /> Composing your chant… the first one can take 10–60 seconds while the model warms up. Please keep this tab open.</div>
                 )}
 
-                {/* AI Chant (beta) — Vāgdhenu */}
-                <div className="chant-beta">
-                  <div className="chant-row">
-                    <button className="chant-btn" onClick={runChant} disabled={chantState === 'loading'}>
-                      {chantState === 'loading' ? <><FaSpinner className="spin" /> Composing chant…</> : <><FaMusic /> AI Chant</>}
-                      <span className="beta-tag">BETA</span>
-                    </button>
-                    {chantState === 'error' && (
-                      <button className="chant-btn" onClick={openVagdhenu}><FaExternalLinkAlt /> Open Vāgdhenu</button>
-                    )}
+                {chantState === 'ready' && chantUrl && (
+                  <div className="chant-ready">
+                    <p className="chant-ready-label">Your chant is ready — press play:</p>
+                    <audio className="chant-audio" src={chantUrl} controls preload="auto" />
+                    <button className="chant-btn chant-regen" onClick={runChant}><FaMusic /> Regenerate</button>
                   </div>
+                )}
 
-                  {chantState === 'loading' && (
-                    <p className="chant-note">Warming up the chant model — this can take 10–60 seconds on the first run. Please keep this tab open.</p>
-                  )}
-                  {chantState === 'ready' && chantUrl && (
-                    <audio className="chant-audio" src={chantUrl} controls autoPlay />
-                  )}
-                  {chantState === 'error' && (
-                    <p className="chant-note">The live chant model is busy or unreachable right now. You can try again, or open the Vāgdhenu demo (your Sanskrit text has been copied — just paste and generate).</p>
-                  )}
-                  <p className="chant-note">
-                    <FaMagic /> AI Chant sings the Sanskrit using <a href="https://prathosh.in/vagdhenu/" target="_blank" rel="noopener noreferrer">Vāgdhenu</a>, a Sanskrit chant model by Dr. Prathosh A.P. It is experimental and works best on metered verse, so results for a spoken lineage declaration may vary.
-                  </p>
-                </div>
+                {chantState === 'error' && (
+                  <div className="chant-error">
+                    <p>The chant model is busy or unreachable right now.</p>
+                    <div className="chant-row">
+                      <button className="chant-btn" onClick={runChant}><FaMusic /> Try again</button>
+                      <button className="chant-btn" onClick={openVagdhenu}><FaExternalLinkAlt /> Open Vāgdhenu</button>
+                    </div>
+                  </div>
+                )}
+
+                {chantState === 'idle' && (
+                  <div className="chant-row">
+                    <button className="chant-btn chant-go" onClick={runChant}><FaMusic /> Generate chant</button>
+                  </div>
+                )}
+
+                <p className="chant-note">
+                  <FaMagic /> Chanted with <a href="https://prathosh.in/vagdhenu/" target="_blank" rel="noopener noreferrer">Vāgdhenu</a>, a Sanskrit chant model by Dr. Prathosh A.P. It is experimental and tuned for metered verse, so a spoken lineage declaration may vary. The chant renders the Sanskrit (Devanagari) form.
+                </p>
               </div>
 
               {/* Share card (image export) */}
